@@ -20,12 +20,18 @@ class _StatsPageState extends State<StatsPage> {
   bool _loaded = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_loaded) {
-      _loaded = true;
-      Provider.of<BetProvider>(context, listen: false).loadBets();
-    }
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_loaded) {
+        _loaded = true;
+        try {
+          Provider.of<BetProvider>(context, listen: false).loadBets();
+        } catch (e) {
+          print('StatsPage.loadBets error: $e');
+        }
+      }
+    });
   }
 
   @override

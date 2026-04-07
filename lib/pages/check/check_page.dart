@@ -25,15 +25,16 @@ class _CheckPageState extends State<CheckPage> {
   @override
   void initState() {
     super.initState();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_betsLoaded) {
-      _betsLoaded = true;
-      Provider.of<BetProvider>(context, listen: false).loadBets();
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_betsLoaded) {
+        _betsLoaded = true;
+        try {
+          Provider.of<BetProvider>(context, listen: false).loadBets();
+        } catch (e) {
+          print('CheckPage.loadBets error: $e');
+        }
+      }
+    });
   }
 
   @override

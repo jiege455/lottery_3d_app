@@ -7,7 +7,6 @@ import 'pages/home/entry_page.dart';
 import 'pages/stats/stats_page.dart';
 import 'pages/check/check_page.dart';
 import 'pages/manage/manage_page.dart';
-import 'widgets/dev_bar.dart';
 
 class Lottery3DApp extends StatelessWidget {
   const Lottery3DApp({super.key});
@@ -19,15 +18,11 @@ class Lottery3DApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BetProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],
-      child: Consumer<SettingsProvider>(
-        builder: (context, settings, _) {
-          return MaterialApp(
-            title: '福彩3D助手',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            home: const MainScaffold(),
-          );
-        },
+      child: MaterialApp(
+        title: '福彩3D助手',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        home: const MainScaffold(),
       ),
     );
   }
@@ -43,19 +38,19 @@ class MainScaffold extends StatefulWidget {
 class _MainScaffoldState extends State<MainScaffold> {
   int _currentIndex = 0;
 
-  @override
-  void initState() {
-    super.initState();
-  }
+  static const List<Widget> _pages = <Widget>[
+    EntryPage(),
+    StatsPage(),
+    CheckPage(),
+    ManagePage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          _getCurrentPage(),
-          const Positioned(top: 0, left: 0, right: 0, child: DevBar()),
-        ],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -73,20 +68,5 @@ class _MainScaffoldState extends State<MainScaffold> {
         ],
       ),
     );
-  }
-
-  Widget _getCurrentPage() {
-    switch (_currentIndex) {
-      case 0:
-        return const EntryPage();
-      case 1:
-        return const StatsPage();
-      case 2:
-        return const CheckPage();
-      case 3:
-        return const ManagePage();
-      default:
-        return const EntryPage();
-    }
   }
 }

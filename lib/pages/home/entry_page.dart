@@ -29,20 +29,21 @@ class _EntryPageState extends State<EntryPage> {
   Timer? _debounce;
   int _lotteryType = 1;
   bool _syncedMultiplier = false;
-  bool _settingsLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _multiplierController.addListener(_onMultiplierChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _initData();
+    });
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_settingsLoaded) {
-      _settingsLoaded = true;
+  void _initData() {
+    try {
       Provider.of<SettingsProvider>(context, listen: false).loadSettings();
+    } catch (e) {
+      print('EntryPage._initData error: $e');
     }
   }
 
@@ -50,7 +51,9 @@ class _EntryPageState extends State<EntryPage> {
     if (!mounted) return;
     final val = double.tryParse(_multiplierController.text);
     if (val != null && val > 0) {
-      Provider.of<SettingsProvider>(context, listen: false).updateMultiplier(val);
+      try {
+        Provider.of<SettingsProvider>(context, listen: false).updateMultiplier(val);
+      } catch (_) {}
     }
   }
 
@@ -122,7 +125,7 @@ class _EntryPageState extends State<EntryPage> {
           const SizedBox(height: 12),
           _buildSaveButton(),
           const SizedBox(height: 24),
-          BetHistoryList(),
+          const BetHistoryList(),
           const SizedBox(height: 20),
         ],
       ),

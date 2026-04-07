@@ -19,12 +19,14 @@ class _HotNumbersState extends State<HotNumbers> {
   bool _loaded = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_loaded) {
-      _loaded = true;
-      _loadData();
-    }
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_loaded) {
+        _loaded = true;
+        _loadData();
+      }
+    });
   }
 
   Future<void> _loadData() async {
