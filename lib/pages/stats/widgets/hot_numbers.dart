@@ -30,7 +30,7 @@ class _HotNumbersState extends State<HotNumbers> {
   Future<void> _loadData() async {
     setState(() => _loading = true);
     final db = DatabaseHelper.instance;
-    final freq = await db.getDigitFrequency(lotteryType: context.read<SettingsProvider>().defaultLotteryType);
+    final freq = await db.getDigitFrequency(lotteryType: Provider.of<SettingsProvider>(context, listen: false).defaultLotteryType);
     if (mounted) setState(() { _freq = freq; _loading = false; });
   }
 

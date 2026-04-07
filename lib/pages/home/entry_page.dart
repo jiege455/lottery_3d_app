@@ -118,7 +118,7 @@ class _EntryPageState extends State<EntryPage> {
           const SizedBox(height: 12),
           _buildSaveButton(),
           const SizedBox(height: 24),
-          const BetHistoryList(),
+          BetHistoryList(),
           const SizedBox(height: 20),
         ],
       ),

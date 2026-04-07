@@ -47,7 +47,7 @@ class ExportPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bets = context.watch<BetProvider>().bets;
+    final bets = Provider.of<BetProvider>(context).bets;
     if (bets.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -56,7 +56,7 @@ class ExportPanel extends StatelessWidget {
       decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(AppStyles.radiusSm), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4)]),
       child: ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: Icon(Icons.file_export_outlined, color: AppColors.primary, size: 28),
+        leading: Icon(Icons.upload_file_outlined, color: AppColors.primary, size: 28),
         title: const Text('数据导出', style: TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text('共 ${bets.length} 条记录可导出', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
         trailing: const Icon(Icons.chevron_right),

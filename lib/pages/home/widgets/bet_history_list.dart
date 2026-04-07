@@ -26,7 +26,7 @@ class _BetHistoryListState extends State<BetHistoryList> {
   }
 
   List<BetRecord> _getFilteredBets() {
-    final bets = context.watch<BetProvider>().bets;
+    final bets = Provider.of<BetProvider>(context).bets;
     if (_searchQuery.isEmpty) return bets;
 
     final query = _searchQuery.toLowerCase();
@@ -38,7 +38,7 @@ class _BetHistoryListState extends State<BetHistoryList> {
   }
 
   void _deleteBet(int id) async {
-    await context.read<BetProvider>().deleteBet(id);
+    await Provider.of<BetProvider>(context, listen: false).deleteBet(id);
     ToastUtil.success(context, '已删除');
   }
 
@@ -75,7 +75,7 @@ class _BetHistoryListState extends State<BetHistoryList> {
         TextField(controller: _searchController, onChanged: (v) => setState(() => _searchQuery = v), decoration: InputDecoration(hintText: '搜索号码/玩法...', prefixIcon: Icon(Icons.search, size: 18, color: AppColors.textLight), isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14))),
         const SizedBox(height: 12),
         if (displayBets.isEmpty)
-          const EmptyState(message: '暂无投注记录', icon: Icons.receipt_long_outlined)
+          EmptyState(message: '暂无投注记录', icon: Icons.receipt_long_outlined)
         else
           ...displayBets.map((bet) => Dismissible(key: ValueKey(bet.id ?? '${bet.number}_${bet.playType}'), direction: DismissDirection.endToStart, background: Container(alignment: Alignment.centerRight, padding: const EdgeInsets.only(right: 20), decoration: BoxDecoration(color: AppColors.danger, borderRadius: BorderRadius.circular(AppStyles.radiusXs)), child: const Icon(Icons.delete, color: Colors.white)), confirmDismiss: (_) async { _confirmDelete(bet); return false; }, child: _buildItem(bet))),
         if (_pageSize < filteredBets.length) Center(child: Padding(padding: const EdgeInsets.only(top: 8), child: TextButton.icon(onPressed: () => setState(() => _pageSize += 20), icon: const Icon(Icons.expand_more, size: 16), label: Text('加载更多 (${filteredBets.length - _pageSize})')))),

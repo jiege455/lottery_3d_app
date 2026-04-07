@@ -30,7 +30,7 @@ class _PlayTypeStatsState extends State<PlayTypeStats> {
   Future<void> _loadData() async {
     setState(() => _loading = true);
     final db = DatabaseHelper.instance;
-    final stats = await db.getPlayTypeStats(lotteryType: context.read<SettingsProvider>().defaultLotteryType);
+    final stats = await db.getPlayTypeStats(lotteryType: Provider.of<SettingsProvider>(context, listen: false).defaultLotteryType);
     if (mounted) setState(() { _stats = stats; _loading = false; });
   }
 
