@@ -35,12 +35,12 @@ class DrawRecord {
   factory DrawRecord.fromMap(Map<String, dynamic> map) {
     return DrawRecord(
       id: map['id'],
-      issue: map['issue'],
-      numbers: map['numbers'],
+      issue: map['issue'] ?? '',
+      numbers: map['numbers'] ?? '',
       sumValue: map['sum_value'] ?? 0,
       span: map['span'] ?? 0,
       formType: map['form_type'] ?? '',
-      drawDate: DateTime.parse(map['draw_date']),
+      drawDate: map['draw_date'] != null ? (DateTime.tryParse(map['draw_date']) ?? DateTime.now()) : DateTime.now(),
       lotteryType: map['lottery_type'] ?? 1,
     );
   }

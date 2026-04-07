@@ -16,32 +16,37 @@ class HotNumbers extends StatefulWidget {
 class _HotNumbersState extends State<HotNumbers> {
   Map<String, int> _freq = {};
   bool _loading = false;
-
-  @override
-  void initState() {
-    super.initState();
-  }
+  bool _loaded = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadData();
+    if (!_loaded) {
+      _loaded = true;
+      _loadData();
+    }
   }
 
   Future<void> _loadData() async {
+    if (_loading) return;
     setState(() => _loading = true);
-    final db = DatabaseHelper.instance;
-    final freq = await db.getDigitFrequency(lotteryType: Provider.of<SettingsProvider>(context, listen: false).defaultLotteryType);
-    if (mounted) setState(() { _freq = freq; _loading = false; });
+    try {
+      final db = DatabaseHelper.instance;
+      final freq = await db.getDigitFrequency(lotteryType: Provider.of<SettingsProvider>(context, listen: false).defaultLotteryType);
+      if (mounted) setState(() { _freq = freq; _loading = false; });
+    } catch (e) {
+      print('HotNumbers._loadData error: $e');
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final total = _freq.values.fold<int>(0, (a, b) => a + b);
-    if (total == 0) return EmptyState(message: '暂无投注数据', icon: Icons.bar_chart);
+    if (total == 0 && !_loading) return EmptyState(message: '暂无投注数据', icon: Icons.bar_chart);
+    if (_loading) return const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()));
 
-    final sorted = _freq.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+    final sorted = _freq.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     final maxVal = sorted.isNotEmpty ? sorted.first.value : 1;
 
     return Container(
@@ -68,7 +73,7 @@ class _HotNumbersState extends State<HotNumbers> {
       const SizedBox(width: 10),
       Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(4), child: LinearProgressIndicator(value: ratio.toDouble(), minHeight: 8, backgroundColor: AppColors.border, valueColor: AlwaysStoppedAnimation(rank <= 3 ? AppColors.danger : AppColors.primary)))),
       const SizedBox(width: 8),
-      SizedBox(width: 50, child: Text('$count次($pct.toStringAsFixed(1)%)', style: TextStyle(fontSize: 11, color: AppColors.textSecondary), textAlign: TextAlign.right)),
+      SizedBox(width: 50, child: Text('$count次(${pct.toStringAsFixed(1)}%)', style: TextStyle(fontSize: 11, color: AppColors.textSecondary), textAlign: TextAlign.right)),
     ]);
   }
 }

@@ -32,12 +32,12 @@ class BetRecord {
   factory BetRecord.fromMap(Map<String, dynamic> map) {
     return BetRecord(
       id: map['id'],
-      number: map['number'],
-      playType: map['play_type'],
-      playTypeName: map['play_type_name'],
+      number: map['number'] ?? '',
+      playType: map['play_type'] ?? 'single',
+      playTypeName: map['play_type_name'] ?? '直选',
       lotteryType: map['lottery_type'] ?? 1,
       multiplier: (map['multiplier'] ?? 1.0).toDouble(),
-      createTime: DateTime.parse(map['create_time']),
+      createTime: map['create_time'] != null ? (DateTime.tryParse(map['create_time']) ?? DateTime.now()) : DateTime.now(),
     );
   }
 

@@ -20,6 +20,7 @@ class _CheckPageState extends State<CheckPage> {
   final TextEditingController _numberController = TextEditingController();
   List<CheckResult> _results = [];
   bool _checking = false;
+  bool _betsLoaded = false;
 
   @override
   void initState() {
@@ -29,7 +30,10 @@ class _CheckPageState extends State<CheckPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    Provider.of<BetProvider>(context, listen: false).loadBets();
+    if (!_betsLoaded) {
+      _betsLoaded = true;
+      Provider.of<BetProvider>(context, listen: false).loadBets();
+    }
   }
 
   @override

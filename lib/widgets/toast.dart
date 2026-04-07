@@ -9,13 +9,23 @@ class ToastUtil {
 
     try {
       final overlay = Overlay.of(context);
+      if (overlay == null) {
+        _showSnackBar(context, message, color);
+        return;
+      }
       _currentToast = OverlayEntry(builder: (context) => _ToastWidget(message: message, color: color));
-      overlay!.insert(_currentToast!);
+      overlay.insert(_currentToast!);
       Future.delayed(const Duration(seconds: 2), () {
         _currentToast?.remove();
         _currentToast = null;
       });
     } catch (e) {
+      _showSnackBar(context, message, color);
+    }
+  }
+
+  static void _showSnackBar(BuildContext context, String message, Color? color) {
+    try {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
@@ -25,7 +35,7 @@ class ToastUtil {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
-    }
+    } catch (_) {}
   }
 
   static void success(BuildContext context, String message) => show(context, message, color: const Color(0xFF059669));
@@ -46,24 +56,20 @@ class _ToastWidget extends StatelessWidget {
       right: 16,
       child: Material(
         color: Colors.transparent,
-        child: AnimatedOpacity(
-          opacity: 1.0,
-          duration: const Duration(milliseconds: 300),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: color ?? const Color(0xFF111827),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 4))],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.check_circle, size: 18, color: Colors.white.withOpacity(0.9)),
-                const SizedBox(width: 8),
-                Flexible(child: Text(message, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500))),
-              ],
-            ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: color ?? const Color(0xFF111827),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 4))],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_circle, size: 18, color: Colors.white.withOpacity(0.9)),
+              const SizedBox(width: 8),
+              Flexible(child: Text(message, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500))),
+            ],
           ),
         ),
       ),

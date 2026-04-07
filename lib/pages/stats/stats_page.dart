@@ -17,10 +17,15 @@ class StatsPage extends StatefulWidget {
 }
 
 class _StatsPageState extends State<StatsPage> {
+  bool _loaded = false;
+
   @override
-  void initState() {
-    super.initState();
-    Future.microtask(() => Provider.of<BetProvider>(context, listen: false).loadBets());
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_loaded) {
+      _loaded = true;
+      Provider.of<BetProvider>(context, listen: false).loadBets();
+    }
   }
 
   @override
@@ -33,9 +38,9 @@ class _StatsPageState extends State<StatsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
-            child: const Text('统计分析', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 28, 20, 16),
+            child: Text('统计分析', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
           ),
           _buildOverviewCard(betProvider, settings),
           const HotNumbers(),

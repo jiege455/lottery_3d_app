@@ -29,6 +29,7 @@ class _EntryPageState extends State<EntryPage> {
   Timer? _debounce;
   int _lotteryType = 1;
   bool _syncedMultiplier = false;
+  bool _settingsLoaded = false;
 
   @override
   void initState() {
@@ -39,7 +40,10 @@ class _EntryPageState extends State<EntryPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    Provider.of<SettingsProvider>(context, listen: false).loadSettings();
+    if (!_settingsLoaded) {
+      _settingsLoaded = true;
+      Provider.of<SettingsProvider>(context, listen: false).loadSettings();
+    }
   }
 
   void _onMultiplierChanged() {

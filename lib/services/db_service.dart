@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'dart:async';
 import '../models/bet_record.dart';
 import '../models/draw_record.dart';
 import '../models/app_settings.dart';
@@ -7,64 +8,64 @@ import '../models/app_settings.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
+  static Completer<Database>? _initCompleter;
 
   DatabaseHelper._init();
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('lottery3d.db');
-    return _database!;
+    _initCompleter ??= Completer<Database>();
+    if (_initCompleter!.isCompleted) return _database!;
+    try {
+      _database = await _initDB('lottery3d.db');
+      _initCompleter!.complete(_database!);
+      return _database!;
+    } catch (e) {
+      print('Database initialization error: $e');
+      _initCompleter = null;
+      rethrow;
+    }
   }
 
   Future<Database> _initDB(String filePath) async {
-    try {
-      final dbPath = await getDatabasesPath();
-      final path = join(dbPath, filePath);
-      return await openDatabase(path, version: 1, onCreate: _onCreate, onUpgrade: _onUpgrade);
-    } catch (e) {
-      print('Database initialization error: $e');
-      rethrow;
-    }
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, filePath);
+    return await openDatabase(path, version: 1, onCreate: _onCreate, onUpgrade: _onUpgrade);
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    try {
-      await db.execute('''
-        CREATE TABLE bet_records (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          number TEXT NOT NULL,
-          play_type TEXT NOT NULL,
-          play_type_name TEXT NOT NULL,
-          lottery_type INTEGER DEFAULT 1,
-          multiplier REAL DEFAULT 1.0,
-          create_time TEXT NOT NULL
-        )
-      ''');
-      await db.execute('''
-        CREATE TABLE draw_records (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          issue TEXT NOT NULL,
-          numbers TEXT NOT NULL,
-          sum_value INTEGER DEFAULT 0,
-          span INTEGER DEFAULT 0,
-          form_type TEXT DEFAULT '',
-          draw_date TEXT NOT NULL,
-          lottery_type INTEGER DEFAULT 1
-        )
-      ''');
-      await db.execute('''
-        CREATE TABLE settings (
-          id INTEGER PRIMARY KEY CHECK (id = 1),
-          default_multiplier REAL DEFAULT 1.0,
-          default_lottery_type INTEGER DEFAULT 1,
-          last_backup_time TEXT DEFAULT ''
-        )
-      ''');
-      await db.insert('settings', AppSettings().toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
-    } catch (e) {
-      print('Database create tables error: $e');
-      rethrow;
-    }
+    await db.execute('''
+      CREATE TABLE bet_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        number TEXT NOT NULL,
+        play_type TEXT NOT NULL,
+        play_type_name TEXT NOT NULL,
+        lottery_type INTEGER DEFAULT 1,
+        multiplier REAL DEFAULT 1.0,
+        create_time TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE draw_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        issue TEXT NOT NULL,
+        numbers TEXT NOT NULL,
+        sum_value INTEGER DEFAULT 0,
+        span INTEGER DEFAULT 0,
+        form_type TEXT DEFAULT '',
+        draw_date TEXT NOT NULL,
+        lottery_type INTEGER DEFAULT 1
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE settings (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        default_multiplier REAL DEFAULT 1.0,
+        default_lottery_type INTEGER DEFAULT 1,
+        last_backup_time TEXT DEFAULT ''
+      )
+    ''');
+    await db.insert('settings', {'id': 1, 'default_multiplier': 1.0, 'default_lottery_type': 1, 'last_backup_time': ''}, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {}
@@ -191,6 +192,7 @@ class DatabaseHelper {
       if (result.isNotEmpty) {
         return AppSettings.fromMap(result.first);
       }
+      await db.insert('settings', {'id': 1, 'default_multiplier': 1.0, 'default_lottery_type': 1, 'last_backup_time': ''}, conflictAlgorithm: ConflictAlgorithm.replace);
       return AppSettings();
     } catch (e) {
       print('getSettings error: $e');
@@ -260,9 +262,11 @@ class DatabaseHelper {
 
   Future<void> close() async {
     try {
-      final db = await database;
-      db.close();
-      _database = null;
+      if (_database != null) {
+        await _database!.close();
+        _database = null;
+        _initCompleter = null;
+      }
     } catch (e) {
       print('close error: $e');
     }

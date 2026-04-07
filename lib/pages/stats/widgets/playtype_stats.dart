@@ -15,23 +15,28 @@ class PlayTypeStats extends StatefulWidget {
 class _PlayTypeStatsState extends State<PlayTypeStats> {
   Map<String, int> _stats = {};
   bool _loading = false;
-
-  @override
-  void initState() {
-    super.initState();
-  }
+  bool _loaded = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadData();
+    if (!_loaded) {
+      _loaded = true;
+      _loadData();
+    }
   }
 
   Future<void> _loadData() async {
+    if (_loading) return;
     setState(() => _loading = true);
-    final db = DatabaseHelper.instance;
-    final stats = await db.getPlayTypeStats(lotteryType: Provider.of<SettingsProvider>(context, listen: false).defaultLotteryType);
-    if (mounted) setState(() { _stats = stats; _loading = false; });
+    try {
+      final db = DatabaseHelper.instance;
+      final stats = await db.getPlayTypeStats(lotteryType: Provider.of<SettingsProvider>(context, listen: false).defaultLotteryType);
+      if (mounted) setState(() { _stats = stats; _loading = false; });
+    } catch (e) {
+      print('PlayTypeStats._loadData error: $e');
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -64,7 +69,7 @@ class _PlayTypeStatsState extends State<PlayTypeStats> {
       Expanded(flex: 2, child: Text(playType, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
       Expanded(flex: 5, child: ClipRRect(borderRadius: BorderRadius.circular(4), child: LinearProgressIndicator(value: ratio.toDouble(), minHeight: 8, backgroundColor: AppColors.border, valueColor: AlwaysStoppedAnimation(AppColors.cyan)))),
       const SizedBox(width: 8),
-      SizedBox(width: 60, child: Text('$count ($pct.toStringAsFixed(1)%)', style: TextStyle(fontSize: 11, color: AppColors.textSecondary), textAlign: TextAlign.right)),
+      SizedBox(width: 60, child: Text('$count (${pct.toStringAsFixed(1)}%)', style: TextStyle(fontSize: 11, color: AppColors.textSecondary), textAlign: TextAlign.right)),
     ]);
   }
 }
