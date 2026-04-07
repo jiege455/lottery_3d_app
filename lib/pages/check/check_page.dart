@@ -82,10 +82,10 @@ class _CheckPageState extends State<CheckPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return SafeArea(child: SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 100),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Padding(padding: const EdgeInsets.fromLTRB(20, 28, 20, 16), child: const Text('中奖校验', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold))),
+        Padding(padding: const EdgeInsets.fromLTRB(20, 16, 20, 12), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('中奖校验', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)), Text('开发者：杰哥网络科技', style: TextStyle(fontSize: 10, color: AppColors.textLight))])),
         _buildInputCard(),
         if (_checking) const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator())),
         if (!_checking && _results.isNotEmpty) ...[
@@ -100,7 +100,7 @@ class _CheckPageState extends State<CheckPage> {
             Text('输入开奖号码开始校验', style: TextStyle(fontSize: 15, color: AppColors.textSecondary)),
           ])),
       ]),
-    );
+    ));
   }
 
   Widget _buildInputCard() {

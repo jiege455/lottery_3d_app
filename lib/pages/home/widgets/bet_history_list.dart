@@ -28,7 +28,6 @@ class _BetHistoryListState extends State<BetHistoryList> {
   List<BetRecord> _getFilteredBets() {
     final bets = Provider.of<BetProvider>(context).bets;
     if (_searchQuery.isEmpty) return bets;
-
     final query = _searchQuery.toLowerCase();
     return bets.where((b) =>
       b.number.toLowerCase().contains(query) ||
@@ -61,6 +60,7 @@ class _BetHistoryListState extends State<BetHistoryList> {
   Widget build(BuildContext context) {
     final filteredBets = _getFilteredBets();
     final displayBets = filteredBets.take(_pageSize).toList();
+    final totalAmount = filteredBets.fold<double>(0, (sum, b) => sum + b.multiplier * 2);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -69,7 +69,11 @@ class _BetHistoryListState extends State<BetHistoryList> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           const Text('投注记录', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          Text('共${filteredBets.length}条', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          Row(children: [
+            Text('共${filteredBets.length}条', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+            const SizedBox(width: 8),
+            Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: AppColors.danger.withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: Text('${totalAmount.toStringAsFixed(1)}元', style: TextStyle(fontSize: 11, color: AppColors.danger, fontWeight: FontWeight.w600))),
+          ]),
         ]),
         const SizedBox(height: 10),
         TextField(controller: _searchController, onChanged: (v) => setState(() => _searchQuery = v), decoration: InputDecoration(hintText: '搜索号码/玩法...', prefixIcon: Icon(Icons.search, size: 18, color: AppColors.textLight), isDense: true, contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14))),
@@ -90,13 +94,21 @@ class _BetHistoryListState extends State<BetHistoryList> {
       playColor = AppColors.playTypeColors[cat] ?? AppColors.primary;
     } catch (_) {}
 
+    final amount = bet.multiplier * 2;
+
     return Container(margin: const EdgeInsets.only(bottom: 6), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppStyles.radiusXs), border: Border.all(color: AppColors.border.withOpacity(0.5))), child: Row(children: [
       Expanded(flex: 2, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(bet.number, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'monospace')),
+        const SizedBox(height: 2),
         Text(DateFormat('MM-dd HH:mm').format(bet.createTime), style: TextStyle(fontSize: 10, color: AppColors.textLight)),
       ])),
-      Expanded(child: Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), decoration: BoxDecoration(color: playColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)), child: Text(bet.playTypeName, style: TextStyle(fontSize: 11, color: playColor, fontWeight: FontWeight.w500), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis))),
-      SizedBox(width: 40, child: Text('${bet.multiplier}x', style: TextStyle(fontSize: 13, color: AppColors.warning, fontWeight: FontWeight.w600), textAlign: TextAlign.center)),
+      Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), decoration: BoxDecoration(color: playColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)), child: Text(bet.playTypeName, style: TextStyle(fontSize: 11, color: playColor, fontWeight: FontWeight.w500), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis)),
+      const SizedBox(width: 8),
+      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+        Text('${bet.multiplier}x', style: TextStyle(fontSize: 12, color: AppColors.warning, fontWeight: FontWeight.w600)),
+        Text('${amount.toStringAsFixed(1)}元', style: TextStyle(fontSize: 11, color: AppColors.danger, fontWeight: FontWeight.w500)),
+      ]),
+      const SizedBox(width: 4),
       IconButton(icon: Icon(Icons.delete_outline, size: 18, color: AppColors.textLight), padding: EdgeInsets.zero, constraints: const BoxConstraints(), onPressed: () => _confirmDelete(bet)),
     ]));
   }

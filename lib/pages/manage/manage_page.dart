@@ -11,19 +11,19 @@ class ManagePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return SafeArea(child: SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 100),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(padding: EdgeInsets.fromLTRB(20, 28, 20, 16), child: Text('数据管理', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold))),
+          Padding(padding: const EdgeInsets.fromLTRB(20, 16, 20, 12), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('数据管理', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)), Text('开发者：杰哥网络科技', style: TextStyle(fontSize: 10, color: AppColors.textLight))])),
           const DrawDataList(),
           const SizedBox(height: 16),
           _buildActionCards(context),
           const SizedBox(height: 20),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildActionCards(BuildContext context) {
