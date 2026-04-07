@@ -8,6 +8,7 @@ import 'widgets/hot_numbers.dart';
 import 'widgets/miss_analysis.dart';
 import 'widgets/playtype_stats.dart';
 import 'widgets/export_panel.dart';
+import 'widgets/kill_number_tool.dart';
 
 class StatsPage extends StatefulWidget {
   const StatsPage({super.key});
@@ -61,6 +62,7 @@ class _StatsPageState extends State<StatsPage> {
             _buildOverviewCard(betProvider, settings, totalAmount, totalMultiplier),
             const HotNumbers(),
             const MissAnalysis(),
+            const KillNumberTool(),
             const PlayTypeStats(),
             const ExportPanel(),
             const SizedBox(height: 20),

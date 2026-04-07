@@ -48,7 +48,7 @@ class CheckService {
   static CheckResult checkSingle(BetRecord bet, DrawRecord draw) {
     final nums = draw.numbers;
     if (nums.length != 3 || bet.number.isEmpty) {
-      return CheckResult(bet: bet, isWin: false, winType: '', winAmount: 0, betAmount: bet.multiplier);
+      return CheckResult(bet: bet, isWin: false, winType: '', winAmount: 0, betAmount: bet.multiplier * 2);
     }
 
     bool isWin = false;
@@ -124,7 +124,7 @@ class CheckService {
       isWin: isWin,
       winType: winType,
       winAmount: odds * bet.multiplier,
-      betAmount: bet.multiplier,
+      betAmount: bet.multiplier * 2,
     );
   }
 
