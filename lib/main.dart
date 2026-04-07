@@ -3,16 +3,14 @@ import 'dart:async';
 import 'app.dart';
 
 void main() {
-  runZonedGuarded(() async {
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+  };
+
+  runZonedGuarded(() {
     WidgetsFlutterBinding.ensureInitialized();
-    FlutterError.onError = (details) {
-      FlutterError.presentError(details);
-      print('FlutterError: ${details.exception}');
-      print('StackTrace: ${details.stack}');
-    };
     runApp(const Lottery3DApp());
   }, (error, stack) {
-    print('Unhandled async error: $error');
-    print('StackTrace: $stack');
+    debugPrint('Unhandled error: $error');
   });
 }
