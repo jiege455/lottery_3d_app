@@ -69,6 +69,16 @@ class _EntryPageState extends State<EntryPage> {
 
   double _getDefaultMultiplier() => double.tryParse(_multiplierController.text) ?? 1.0;
 
+  int get _totalBetCount => _parsedItems.length;
+
+  double get _totalAmount {
+    double total = 0;
+    for (final item in _parsedItems) {
+      total += item.multiplier * 2;
+    }
+    return total;
+  }
+
   Future<void> _saveBets() async {
     if (_parsedItems.isEmpty) {
       ToastUtil.warning(context, '请先输入投注内容');
@@ -108,25 +118,65 @@ class _EntryPageState extends State<EntryPage> {
     }
     _lotteryType = settings.defaultLotteryType;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 100),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 100),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('投注录入', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  Text('开发者：杰哥网络科技', style: TextStyle(fontSize: 10, color: AppColors.textLight)),
+                ],
+              ),
+            ),
+            _buildLotterySwitcher(),
+            const SizedBox(height: 4),
+            _buildMultiplierSection(),
+            const SizedBox(height: 4),
+            PlayTypeChips(selectedPlayType: _selectedPlayType, onChanged: (code) => setState(() => _selectedPlayType = code)),
+            RuleHintBox(playTypeCode: _selectedPlayType),
+            BatchInput(controller: _inputController, onChanged: _onInputChanged),
+            PreviewList(items: _parsedItems),
+            if (_parsedItems.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              _buildSummaryCard(),
+            ],
+            const SizedBox(height: 12),
+            _buildSaveButton(),
+            const SizedBox(height: 24),
+            const BetHistoryList(),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(AppStyles.radiusXs),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          const Padding(padding: EdgeInsets.fromLTRB(20, 28, 20, 16), child: Text('投注录入', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold))),
-          _buildLotterySwitcher(),
-          const SizedBox(height: 4),
-          _buildMultiplierSection(),
-          const SizedBox(height: 4),
-          PlayTypeChips(selectedPlayType: _selectedPlayType, onChanged: (code) => setState(() => _selectedPlayType = code)),
-          RuleHintBox(playTypeCode: _selectedPlayType),
-          BatchInput(controller: _inputController, onChanged: _onInputChanged),
-          PreviewList(items: _parsedItems),
-          const SizedBox(height: 12),
-          _buildSaveButton(),
-          const SizedBox(height: 24),
-          const BetHistoryList(),
-          const SizedBox(height: 20),
+          Column(children: [
+            Text('$_totalBetCount', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary)),
+            Text('总注数', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+          ]),
+          Container(width: 1, height: 30, color: AppColors.border),
+          Column(children: [
+            Text('${_totalAmount.toStringAsFixed(1)}元', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.danger)),
+            Text('总金额', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+          ]),
         ],
       ),
     );
@@ -180,7 +230,7 @@ class _EntryPageState extends State<EntryPage> {
       child: SizedBox(width: double.infinity, child: ElevatedButton.icon(
         onPressed: _saveBets,
         icon: const Icon(Icons.save, size: 18),
-        label: Text('保存投注 (${_parsedItems.length}条)', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+        label: Text('保存投注 (${_parsedItems.length}条 / ${_totalAmount.toStringAsFixed(1)}元)', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
       )),
     );
   }

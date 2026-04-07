@@ -21,7 +21,7 @@ class ParsedItem {
 
 class BatchParser {
   static const int previewMax = 50;
-  static const Set<String> separators = {',', '-', '/', ' ', '、', '\t'};
+  static const Set<String> separators = {',', '、', '\t'};
   static final RegExp _multiplierRegex = RegExp(r'[*×x](\d+\.?\d*)$');
 
   static final Map<String, String> _prefixLookup = () {
@@ -125,6 +125,10 @@ class BatchParser {
   static List<String> _splitContent(String content) {
     var result = content;
     for (final sep in separators) result = result.replaceAll(sep, ',');
+    result = result.replaceAll(RegExp(r'\s+'), ',');
+    result = result.replaceAll(RegExp(r'(?<=\d)-(?=\d)'), ',');
+    result = result.replaceAll(RegExp(r'(?<=\d)/'), ',');
+    result = result.replaceAll(RegExp(r'(?<=\d)\.(?=\d)'), '');
     return result.split(',').where((s) => s.trim().isNotEmpty).toList();
   }
 
