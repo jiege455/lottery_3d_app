@@ -43,19 +43,17 @@ class MainScaffold extends StatefulWidget {
 class _MainScaffoldState extends State<MainScaffold> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = const [
-    EntryPage(),
-    StatsPage(),
-    CheckPage(),
-    ManagePage(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          _pages[_currentIndex],
+          _getCurrentPage(),
           const Positioned(top: 0, left: 0, right: 0, child: DevBar()),
         ],
       ),
@@ -75,5 +73,20 @@ class _MainScaffoldState extends State<MainScaffold> {
         ],
       ),
     );
+  }
+
+  Widget _getCurrentPage() {
+    switch (_currentIndex) {
+      case 0:
+        return const EntryPage();
+      case 1:
+        return const StatsPage();
+      case 2:
+        return const CheckPage();
+      case 3:
+        return const ManagePage();
+      default:
+        return const EntryPage();
+    }
   }
 }

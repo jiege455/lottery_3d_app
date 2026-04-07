@@ -5,14 +5,35 @@ import 'widgets/splash_screen.dart';
 
 void main() {
   runZonedGuarded(() {
-    WidgetsFlutterBinding.ensureInitialized();
-    FlutterError.onError = (details) {
-      FlutterError.presentError(details);
+    ErrorWidget.builder = (FlutterErrorDetails details) {
+      return Container(
+        color: Colors.white,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              const Text('页面加载出错', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text(
+                details.exception.toString(),
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
     };
+
+    WidgetsFlutterBinding.ensureInitialized();
     runApp(const Lottery3DAppWrapper());
   }, (error, stack) {
-    print('Unhandled error: $error');
+    print('=== UNHANDLED ERROR ===');
+    print('Error: $error');
     print('Stack: $stack');
+    print('=========================');
   });
 }
 
@@ -65,6 +86,18 @@ class _Lottery3DAppWrapperState extends State<Lottery3DAppWrapper> {
     if (_showSplash) {
       return MaterialApp(debugShowCheckedModeBanner: false, home: SplashScreen(onFinished: () => setState(() => _showSplash = false)));
     }
-    return const Lottery3DApp();
+    
+    try {
+      return const Lottery3DApp();
+    } catch (e, s) {
+      print('Lottery3DApp error: $e\n$s');
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _errorMessage = e.toString();
+        });
+      }
+      return const SizedBox.shrink();
+    }
   }
 }
