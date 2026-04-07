@@ -14,15 +14,19 @@ class DatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _initCompleter ??= Completer<Database>();
-    if (_initCompleter!.isCompleted) return _database!;
+    if (_initCompleter != null) {
+      return _initCompleter!.future;
+    }
+    _initCompleter = Completer<Database>();
     try {
       _database = await _initDB('lottery3d.db');
       _initCompleter!.complete(_database!);
       return _database!;
     } catch (e) {
       print('Database initialization error: $e');
+      _initCompleter!.completeError(e);
       _initCompleter = null;
+      _database = null;
       rethrow;
     }
   }
