@@ -176,7 +176,7 @@ class _CheckPageState extends State<CheckPage> {
     return Container(margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 3), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(color: isWin ? AppColors.success.withOpacity(0.06) : Colors.transparent, borderRadius: BorderRadius.circular(AppStyles.radiusXs)), child: Row(children: [
       Expanded(flex: 2, child: Text(result.bet.number, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, fontFamily: 'monospace'))),
       Expanded(child: Text(result.bet.playTypeName, style: TextStyle(fontSize: 11, color: AppColors.textSecondary))),
-      SizedBox(width: 50, child: Text('${result.betAmount}注', style: TextStyle(fontSize: 11, color: AppColors.textSecondary), textAlign: TextAlign.right)),
+      SizedBox(width: 50, child: Text('${result.betAmount.toStringAsFixed(1)}元', style: TextStyle(fontSize: 11, color: AppColors.textSecondary), textAlign: TextAlign.right)),
       if (isWin) ...[
         const SizedBox(width: 8),
         Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: AppColors.success.withOpacity(0.15), borderRadius: BorderRadius.circular(6)), child: Text('+${result.winAmount.toStringAsFixed(1)}', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.success))),

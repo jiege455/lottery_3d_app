@@ -88,10 +88,18 @@ class CheckService {
         }
         break;
       case 'shuangfei_g3':
-        isWin = DrawRecord.getFormType(nums) == '组三';
+        if (DrawRecord.getFormType(nums) == '组三') {
+          final betDigits = bet.number.replaceAll(RegExp(r'[^0-9]'), '').split('').toSet();
+          final drawDigits = nums.split('').toSet();
+          isWin = betDigits.every((d) => drawDigits.contains(d));
+        }
         break;
       case 'shuangfei_g6':
-        isWin = DrawRecord.getFormType(nums) == '组六';
+        if (DrawRecord.getFormType(nums) == '组六') {
+          final betDigits = bet.number.replaceAll(RegExp(r'[^0-9]'), '').split('').toSet();
+          final drawDigits = nums.split('').toSet();
+          isWin = betDigits.every((d) => drawDigits.contains(d));
+        }
         break;
       case var pt when pt.startsWith('span'):
         final spanVal = int.tryParse(pt.replaceAll('span', '')) ?? 0;

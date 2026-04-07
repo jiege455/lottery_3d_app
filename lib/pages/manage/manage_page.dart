@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/bet_provider.dart';
+import '../../services/db_service.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/toast.dart';
 import 'widgets/draw_data_list.dart';
@@ -65,6 +66,7 @@ class ManagePage extends StatelessWidget {
           onPressed: () async {
             Navigator.pop(ctx);
             await Provider.of<BetProvider>(context, listen: false).deleteAllBets();
+            await DatabaseHelper.instance.deleteAllDraws();
             ToastUtil.success(context, '已清空所有数据');
           },
           child: const Text('确认清空'),

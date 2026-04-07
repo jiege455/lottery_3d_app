@@ -170,8 +170,6 @@ class _KillNumberToolState extends State<KillNumberTool> {
   }
 
   Widget _buildKillRow(String title, List<String> digits, Color color) {
-    final posNames = ['百位杀码', '十位杀码', '个位杀码'];
-    final isPos = posNames.contains(title);
     return Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
       SizedBox(width: 72, child: Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color))),
       const SizedBox(width: 8),

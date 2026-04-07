@@ -134,6 +134,16 @@ class DatabaseHelper {
     }
   }
 
+  Future<int> deleteAllDraws() async {
+    try {
+      final db = await database;
+      return await db.delete('draw_records');
+    } catch (e) {
+      print('deleteAllDraws error: $e');
+      return 0;
+    }
+  }
+
   Future<void> insertBetsBatch(List<BetRecord> records) async {
     try {
       final db = await database;

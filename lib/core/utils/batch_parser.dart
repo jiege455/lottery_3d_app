@@ -128,7 +128,7 @@ class BatchParser {
     result = result.replaceAll(RegExp(r'\s+'), ',');
     result = result.replaceAll(RegExp(r'(?<=\d)-(?=\d)'), ',');
     result = result.replaceAll(RegExp(r'(?<=\d)/'), ',');
-    result = result.replaceAll(RegExp(r'(?<=\d)\.(?=\d)'), '');
+    result = result.replaceAll(RegExp(r'(?<=\d{3})\.(?=\d{3})'), ',');
     return result.split(',').where((s) => s.trim().isNotEmpty).toList();
   }
 
