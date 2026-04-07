@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../providers/bet_provider.dart';
 import '../../../../providers/settings_provider.dart';
 import '../../../../services/db_service.dart';
+import '../../../../widgets/empty_state.dart';
 
 class HotNumbers extends StatefulWidget {
   const HotNumbers({super.key});
