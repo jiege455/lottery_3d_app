@@ -29,7 +29,7 @@ class _CheckPageState extends State<CheckPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    Provider.of<BetProvider>(context, listen: false).loadBets();
+    context.read<BetProvider>().loadBets();
   }
 
   @override
@@ -48,7 +48,7 @@ class _CheckPageState extends State<CheckPage> {
       return;
     }
 
-    final bets = Provider.of<BetProvider>(context, listen: false).bets;
+    final bets = context.read<BetProvider>().bets;
     if (bets.isEmpty) {
       ToastUtil.warning(context, '暂无投注记录');
       return;

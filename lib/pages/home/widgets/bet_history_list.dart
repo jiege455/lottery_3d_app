@@ -26,7 +26,7 @@ class _BetHistoryListState extends State<BetHistoryList> {
   }
 
   List<BetRecord> _getFilteredBets() {
-    final bets = Provider.of<BetProvider>(context).bets;
+    final bets = context.watch<BetProvider>().bets;
     if (_searchQuery.isEmpty) return bets;
 
     final query = _searchQuery.toLowerCase();
@@ -38,7 +38,7 @@ class _BetHistoryListState extends State<BetHistoryList> {
   }
 
   void _deleteBet(int id) async {
-    await Provider.of<BetProvider>(context, listen: false).deleteBet(id);
+    await context.read<BetProvider>().deleteBet(id);
     ToastUtil.success(context, '已删除');
   }
 

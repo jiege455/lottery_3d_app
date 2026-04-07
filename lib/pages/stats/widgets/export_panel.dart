@@ -25,7 +25,8 @@ class ExportPanel extends StatelessWidget {
     final lines = <String>['=' * 50, '福彩3D/排列三 投注记录导出', '=' * 50, '', '开发者：杰哥网络科技 · QQ 2711793818', '', '导出时间：${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}', '', '总记录数：${bets.length}', '', '-' * 50];
     for (var i = 0; i < bets.length; i++) {
       final b = bets[i];
-      lines.add('${(i + 1).toString().padRight(4)} | ${b.lotteryType == 1 ? "福彩3D".padRight(6)} | ${b.playTypeName.padRight(8)} | ${b.number.padLeft(6)} | ${b.multiplier.toString().padLeft(4)} | ${DateFormat('MM-dd HH:mm').format(b.createTime)}');
+      final lotteryName = b.lotteryType == 1 ? '福彩3D' : '排列三';
+      lines.add('${(i + 1).toString().padRight(4)} | ${lotteryName.padRight(6)} | ${b.playTypeName.padRight(8)} | ${b.number.padLeft(6)} | ${b.multiplier.toString().padLeft(4)} | ${DateFormat('MM-dd HH:mm').format(b.createTime)}');
     }
     lines.add('-' * 50);
     return lines.join('\n');
@@ -46,7 +47,7 @@ class ExportPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bets = Provider.of<BetProvider>(context).bets;
+    final bets = context.watch<BetProvider>().bets;
     if (bets.isEmpty) return const SizedBox.shrink();
 
     return Container(

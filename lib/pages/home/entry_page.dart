@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'dart:async';
-import '../../core/theme/app_theme.dart';
-import '../../core/constants/play_types.dart';
-import '../../core/utils/batch_parser.dart';
-import '../../models/bet_record.dart';
-import '../../providers/bet_provider.dart';
-import '../../providers/settings_provider.dart';
-import '../widgets/play_type_chips.dart';
-import '../widgets/rule_hint_box.dart';
-import '../widgets/batch_input.dart';
-import '../widgets/preview_list.dart';
-import '../widgets/bet_history_list.dart';
-import '../../widgets/toast.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/constants/play_types.dart';
+import '../../../core/utils/batch_parser.dart';
+import '../../../models/bet_record.dart';
+import '../../../providers/bet_provider.dart';
+import '../../../providers/settings_provider.dart';
+import 'widgets/play_type_chips.dart';
+import 'widgets/rule_hint_box.dart';
+import 'widgets/batch_input.dart';
+import 'widgets/preview_list.dart';
+import 'widgets/bet_history_list.dart';
+import '../../../widgets/toast.dart';
 
 class EntryPage extends StatefulWidget {
   const EntryPage({super.key});
@@ -59,9 +60,7 @@ class _EntryPageState extends State<EntryPage> {
     });
   }
 
-  double _getDefaultMultiplier() {
-    return double.tryParse(_multiplierController.text) ?? 1.0;
-  }
+  double _getDefaultMultiplier() => double.tryParse(_multiplierController.text) ?? 1.0;
 
   Future<void> _saveBets() async {
     if (_parsedItems.isEmpty) {
@@ -107,18 +106,12 @@ class _EntryPageState extends State<EntryPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
-            child: const Text('投注录入', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          ),
+          const Padding(padding: EdgeInsets.fromLTRB(20, 28, 20, 16), child: Text('投注录入', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold))),
           _buildLotterySwitcher(),
           const SizedBox(height: 4),
           _buildMultiplierSection(),
           const SizedBox(height: 4),
-          PlayTypeChips(
-            selectedPlayType: _selectedPlayType,
-            onChanged: (code) => setState(() => _selectedPlayType = code),
-          ),
+          PlayTypeChips(selectedPlayType: _selectedPlayType, onChanged: (code) => setState(() => _selectedPlayType = code)),
           RuleHintBox(playTypeCode: _selectedPlayType),
           BatchInput(controller: _inputController, onChanged: _onInputChanged),
           PreviewList(items: _parsedItems),
@@ -137,38 +130,24 @@ class _EntryPageState extends State<EntryPage> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(AppStyles.radiusSm)),
-      child: Row(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => Provider.of<SettingsProvider>(context, listen: false).updateLotteryType(1),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: _lotteryType == 1 ? AppColors.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(AppStyles.radiusXs),
-                ),
-                child: Text('福彩 3D', textAlign: TextAlign.center,
-                  style: TextStyle(color: _lotteryType == 1 ? Colors.white : AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
-              ),
-            ),
+      child: Row(children: [
+        Expanded(child: GestureDetector(
+          onTap: () => Provider.of<SettingsProvider>(context, listen: false).updateLotteryType(1),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(color: _lotteryType == 1 ? AppColors.primary : Colors.transparent, borderRadius: BorderRadius.circular(AppStyles.radiusXs)),
+            child: Text('福彩 3D', textAlign: TextAlign.center, style: TextStyle(color: _lotteryType == 1 ? Colors.white : AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
           ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => Provider.of<SettingsProvider>(context, listen: false).updateLotteryType(2),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: _lotteryType == 2 ? AppColors.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(AppStyles.radiusXs),
-                ),
-                child: Text('排列三', textAlign: TextAlign.center,
-                  style: TextStyle(color: _lotteryType == 2 ? Colors.white : AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
-              ),
-            ),
+        )),
+        Expanded(child: GestureDetector(
+          onTap: () => Provider.of<SettingsProvider>(context, listen: false).updateLotteryType(2),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(color: _lotteryType == 2 ? AppColors.primary : Colors.transparent, borderRadius: BorderRadius.circular(AppStyles.radiusXs)),
+            child: Text('排列三', textAlign: TextAlign.center, style: TextStyle(color: _lotteryType == 2 ? Colors.white : AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
           ),
-        ],
-      ),
+        )),
+      ]),
     );
   }
 
@@ -177,34 +156,25 @@ class _EntryPageState extends State<EntryPage> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(AppStyles.radiusSm), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4)]),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('默认倍数', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              SizedBox(width: 80, height: 36, child: TextField(controller: _multiplierController, keyboardType: const TextInputType.numberWithOptions(decimal: true), textAlign: TextAlign.center, decoration: InputDecoration(contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8), isDense: true))),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Wrap(spacing: 6, runSpacing: 6, children: ['1', '2', '5', '10', '0.1'].map((m) => ActionChip(label: Text('${m}x'), labelStyle: const TextStyle(fontSize: 12), onPressed: () => _multiplierController.text = m)).toList()),
-        ],
-      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          const Text('默认倍数', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+          SizedBox(width: 80, height: 36, child: TextField(controller: _multiplierController, keyboardType: const TextInputType.numberWithOptions(decimal: true), textAlign: TextAlign.center, decoration: InputDecoration(contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8), isDense: true))),
+        ]),
+        const SizedBox(height: 10),
+        Wrap(spacing: 6, runSpacing: 6, children: ['1', '2', '5', '10', '0.1'].map((m) => ActionChip(label: Text('${m}x'), labelStyle: const TextStyle(fontSize: 12), onPressed: () => _multiplierController.text = m)).toList()),
+      ]),
     );
   }
 
   Widget _buildSaveButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton.icon(
-          onPressed: _saveBets,
-          icon: const Icon(Icons.save, size: 18),
-          label: Text('保存投注 (${_parsedItems.length}条)', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-        ),
-      ),
+      child: SizedBox(width: double.infinity, child: ElevatedButton.icon(
+        onPressed: _saveBets,
+        icon: const Icon(Icons.save, size: 18),
+        label: Text('保存投注 (${_parsedItems.length}条)', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+      )),
     );
   }
 }

@@ -22,7 +22,7 @@ class Lottery3DApp extends StatelessWidget {
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
           return MaterialApp(
-            title: '福彩 3D 助手',
+            title: '福彩3D助手',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             home: const MainScaffold(),
@@ -59,7 +59,21 @@ class _MainScaffoldState extends State<MainScaffold> {
           const Positioned(top: 0, left: 0, right: 0, child: DevBar()),
         ],
       ),
-      bottomNavigationBar: const DevBar(),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textSecondary,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+        unselectedLabelStyle: const TextStyle(fontSize: 12),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.edit_note), label: '录入'),
+          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: '统计'),
+          BottomNavigationBarItem(icon: Icon(Icons.verified_outlined), label: '校验'),
+          BottomNavigationBarItem(icon: Icon(Icons.folder_open), label: '管理'),
+        ],
+      ),
     );
   }
 }
