@@ -11,34 +11,57 @@ class BetProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Future<void> loadBets({int? lotteryType}) async {
-    _isLoading = true;
-    notifyListeners();
-    _bets = await _db.getAllBets(lotteryType: lotteryType);
-    _isLoading = false;
-    notifyListeners();
+    try {
+      _isLoading = true;
+      notifyListeners();
+      _bets = await _db.getAllBets(lotteryType: lotteryType);
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      print('BetProvider.loadBets error: $e');
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<int> addBet(BetRecord bet) async {
-    final id = await _db.insertBet(bet);
-    await loadBets();
-    return id;
+    try {
+      final id = await _db.insertBet(bet);
+      await loadBets();
+      return id;
+    } catch (e) {
+      print('BetProvider.addBet error: $e');
+      return -1;
+    }
   }
 
   Future<void> addBetsBatch(List<BetRecord> bets) async {
-    await _db.insertBetsBatch(bets);
-    await loadBets();
+    try {
+      await _db.insertBetsBatch(bets);
+      await loadBets();
+    } catch (e) {
+      print('BetProvider.addBetsBatch error: $e');
+    }
   }
 
   Future<void> deleteBet(int id) async {
-    await _db.deleteBet(id);
-    _bets.removeWhere((b) => b.id == id);
-    notifyListeners();
+    try {
+      await _db.deleteBet(id);
+      _bets.removeWhere((b) => b.id == id);
+      notifyListeners();
+    } catch (e) {
+      print('BetProvider.deleteBet error: $e');
+    }
   }
 
   Future<void> deleteAllBets() async {
-    await _db.deleteAllBets();
-    _bets.clear();
-    notifyListeners();
+    try {
+      await _db.deleteAllBets();
+      _bets.clear();
+      notifyListeners();
+    } catch (e) {
+      print('BetProvider.deleteAllBets error: $e');
+    }
   }
 
   int get totalBets => _bets.length;
