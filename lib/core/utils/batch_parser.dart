@@ -104,7 +104,7 @@ class BatchParser {
       }
     }
     final numVal = int.tryParse(clean);
-    if (numVal != null && numVal >= 0 && numVal <= 27) return 'sum_val';
+    if (numVal != null && numVal >= 0 && numVal <= 27) return 'sum_$numVal';
     return null;
   }
 

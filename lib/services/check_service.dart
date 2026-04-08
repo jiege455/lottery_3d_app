@@ -84,15 +84,19 @@ class CheckService {
     switch (bet.playType) {
       case 'single':
         isWin = bet.number == nums;
+        winType = '直选';
         break;
       case 'group3':
         isWin = _isGroup3(bet.number) && _isSameGroup(bet.number, nums);
+        winType = '组三';
         break;
       case 'group6':
         isWin = _isGroup6(bet.number) && _isSameGroup(bet.number, nums);
+        winType = '组六';
         break;
       case 'dan':
         isWin = nums.contains(bet.number);
+        winType = '胆码';
         break;
       case 'pos1':
         final parts = bet.number.split(',');
@@ -101,6 +105,7 @@ class CheckService {
           final digit = parts[1];
           int idx = pos == '百位' ? 0 : (pos == '十位' ? 1 : 2);
           isWin = nums[idx] == digit;
+          winType = '定位胆';
         }
         break;
       case 'pos2':
@@ -108,9 +113,16 @@ class CheckService {
         if (parts.length == 2) {
           final pos = parts[0];
           final digits = parts[1];
-          if (pos == '前两位') isWin = '${nums[0]}${nums[1]}' == digits;
-          else if (pos == '后两位') isWin = '${nums[1]}${nums[2]}' == digits;
-          else if (pos == '首尾') isWin = '${nums[0]}${nums[2]}' == digits;
+          if (pos == '前两位') {
+            isWin = '${nums[0]}${nums[1]}' == digits;
+            winType = '前两位';
+          } else if (pos == '后两位') {
+            isWin = '${nums[1]}${nums[2]}' == digits;
+            winType = '后两位';
+          } else if (pos == '首尾') {
+            isWin = '${nums[0]}${nums[2]}' == digits;
+            winType = '首尾';
+          }
         }
         break;
       case 'shuangfei_g3':
@@ -118,6 +130,7 @@ class CheckService {
           final betDigits = bet.number.replaceAll(RegExp(r'[^0-9]'), '').split('').toSet();
           final drawDigits = nums.split('').toSet();
           isWin = betDigits.every((d) => drawDigits.contains(d));
+          if (isWin) winType = '双飞组三';
         }
         break;
       case 'shuangfei_g6':
@@ -125,6 +138,7 @@ class CheckService {
           final betDigits = bet.number.replaceAll(RegExp(r'[^0-9]'), '').split('').toSet();
           final drawDigits = nums.split('').toSet();
           isWin = betDigits.every((d) => drawDigits.contains(d));
+          if (isWin) winType = '双飞组六';
         }
         break;
       case var pt when pt.startsWith('g6_dt'):
@@ -134,6 +148,7 @@ class CheckService {
             final dan = parts[0];
             final tuo = parts[1].split('').toSet();
             isWin = nums.contains(dan) && tuo.every((d) => nums.contains(d));
+            if (isWin) winType = '组六胆拖';
           }
         }
         break;
@@ -144,30 +159,36 @@ class CheckService {
             final dan = parts[0];
             final tuo = parts[1].split('').toSet();
             isWin = nums.contains(dan) && tuo.every((d) => nums.contains(d));
+            if (isWin) winType = '组三胆拖';
           }
         }
         break;
       case 'baozi_single':
         isWin = bet.number == nums && nums[0] == nums[1] && nums[1] == nums[2];
+        if (isWin) winType = '豹子直选';
         break;
       case 'baozi_all':
         isWin = nums[0] == nums[1] && nums[1] == nums[2];
+        if (isWin) winType = '豹子组选';
         break;
       case var pt when pt.startsWith('zq6_'):
         final betDigits = bet.number.split('').toSet();
         final drawDigits = nums.split('').toSet();
         isWin = betDigits.every((d) => drawDigits.contains(d));
+        if (isWin) winType = '中趣组六';
         break;
       case var pt when pt.startsWith('zq3_'):
         final betDigits = bet.number.split('').toSet();
         final drawDigits = nums.split('').toSet();
         isWin = betDigits.every((d) => drawDigits.contains(d));
+        if (isWin) winType = '中趣组三';
         break;
       case var pt when pt.startsWith('zbl_g6_'):
         if (DrawRecord.getFormType(nums) == '组六') {
           final betDigits = bet.number.split('').toSet();
           final drawDigits = nums.split('').toSet();
           isWin = betDigits.every((d) => drawDigits.contains(d));
+          if (isWin) winType = '追伯乐组六';
         }
         break;
       case var pt when pt.startsWith('zbl_g3_'):
@@ -175,32 +196,37 @@ class CheckService {
           final betDigits = bet.number.split('').toSet();
           final drawDigits = nums.split('').toSet();
           isWin = betDigits.every((d) => drawDigits.contains(d));
+          if (isWin) winType = '追伯乐组三';
         }
         break;
       case var pt when pt.startsWith('span'):
         final spanVal = int.tryParse(pt.replaceAll('span', '')) ?? 0;
         isWin = DrawRecord.getSpan(nums) == spanVal;
+        if (isWin) winType = '跨度$spanVal';
         break;
       case var pt when pt.startsWith('sum_'):
         final sumVal = int.tryParse(pt.replaceAll('sum_', '')) ?? 0;
         isWin = DrawRecord.getSumValue(nums) == sumVal;
+        if (isWin) winType = '和值$sumVal';
         break;
       case 'bigsmall':
         final sum = DrawRecord.getSumValue(nums);
         isWin = (bet.number == '大' && sum >= 14) || (bet.number == '小' && sum <= 13);
+        if (isWin) winType = bet.number == '大' ? '大' : '小';
         break;
       case 'oddeven':
         final sum = DrawRecord.getSumValue(nums);
         isWin = (bet.number == '单' && sum % 2 == 1) || (bet.number == '双' && sum % 2 == 0);
+        if (isWin) winType = bet.number == '单' ? '单' : '双';
         break;
       default:
         isWin = _checkComplexPlay(bet, nums);
+        if (isWin) winType = bet.playTypeName;
         break;
     }
 
     if (isWin) {
       baseOdds = oddsMap[bet.playType] ?? 0;
-      winType = bet.playTypeName;
     }
 
     double winAmount = 0;

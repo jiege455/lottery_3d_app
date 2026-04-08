@@ -37,8 +37,8 @@ class _DrawDataListState extends State<DrawDataList> {
     if (_loading) return;
     setState(() => _loading = true);
     try {
-      final lotteryType = Provider.of<SettingsProvider>(context, listen: false).defaultLotteryType;
-      final draws = await DatabaseHelper.instance.getAllDraws(lotteryType: lotteryType, limit: 100);
+      // 加载所有彩种的开奖数据
+      final draws = await DatabaseHelper.instance.getAllDraws(limit: 100);
       if (mounted) setState(() { _draws = draws; _loading = false; });
     } catch (e) {
       print('DrawDataList._loadData error: $e');
@@ -50,12 +50,14 @@ class _DrawDataListState extends State<DrawDataList> {
     if (_syncing) return;
     setState(() => _syncing = true);
     try {
-      final lotteryType = Provider.of<SettingsProvider>(context, listen: false).defaultLotteryType;
-      final count = await LotteryApiService.syncDraws(lotteryType: lotteryType, count: 20);
+      // 同时同步福彩 3D 和排列三
+      int totalCount = 0;
+      totalCount += await LotteryApiService.syncDraws(lotteryType: 1, count: 20);
+      totalCount += await LotteryApiService.syncDraws(lotteryType: 2, count: 20);
       await _loadData();
       if (mounted) {
-        if (count > 0) {
-          ToastUtil.success(context, '同步成功，新增 $count 条开奖数据');
+        if (totalCount > 0) {
+          ToastUtil.success(context, '同步成功，新增 $totalCount 条开奖数据（福彩 3D+ 排列三）');
         } else {
           ToastUtil.success(context, '已同步，暂无新数据');
         }
