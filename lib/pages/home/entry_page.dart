@@ -95,6 +95,7 @@ class _EntryPageState extends State<EntryPage> {
       return;
     }
     try {
+      final batchId = 'B${DateTime.now().millisecondsSinceEpoch}';
       final bets = _parsedItems.map((item) => BetRecord(
         number: item.number,
         playType: item.playType,
@@ -102,6 +103,7 @@ class _EntryPageState extends State<EntryPage> {
         lotteryType: _lotteryType,
         multiplier: item.multiplier,
         baseAmount: item.baseAmount,
+        batchId: batchId,
       )).toList();
       await Provider.of<BetProvider>(context, listen: false).addBetsBatch(bets);
       ToastUtil.success(context, '成功保存 ${bets.length} 条记录');

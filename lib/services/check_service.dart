@@ -41,11 +41,11 @@ class CheckService {
     'oddeven': 2.0,
   };
 
-  static List<CheckResult> checkAll(List<BetRecord> bets, DrawRecord draw) {
-    return bets.map((bet) => checkSingle(bet, draw)).toList();
+  static List<CheckResult> checkAll(List<BetRecord> bets, DrawRecord draw, double customPayoutRate = 0.0) {
+    return bets.map((bet) => checkSingle(bet, draw, customPayoutRate)).toList();
   }
 
-  static CheckResult checkSingle(BetRecord bet, DrawRecord draw) {
+  static CheckResult checkSingle(BetRecord bet, DrawRecord draw, double customPayoutRate = 0.0) {
     final nums = draw.numbers;
     if (nums.length != 3 || bet.number.isEmpty) {
       return CheckResult(bet: bet, isWin: false, winType: '', winAmount: 0, betAmount: bet.multiplier * bet.baseAmount);
@@ -53,7 +53,7 @@ class CheckService {
 
     bool isWin = false;
     String winType = '';
-    double odds = 0;
+    double baseOdds = 0;
 
     switch (bet.playType) {
       case 'single':
@@ -123,15 +123,24 @@ class CheckService {
     }
 
     if (isWin) {
-      odds = oddsMap[bet.playType] ?? 0;
+      baseOdds = oddsMap[bet.playType] ?? 0;
       winType = bet.playTypeName;
+    }
+
+    double winAmount = 0;
+    if (isWin) {
+      if (customPayoutRate > 0) {
+        winAmount = bet.multiplier * bet.baseAmount * customPayoutRate;
+      } else {
+        winAmount = bet.multiplier * bet.baseAmount * baseOdds;
+      }
     }
 
     return CheckResult(
       bet: bet,
       isWin: isWin,
       winType: winType,
-      winAmount: odds * bet.multiplier,
+      winAmount: winAmount,
       betAmount: bet.multiplier * bet.baseAmount,
     );
   }
