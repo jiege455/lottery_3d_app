@@ -221,14 +221,14 @@ class _CheckPageState extends State<CheckPage> {
   Widget _buildSummaryCard() {
     final totalBet = _results.fold<double>(0, (sum, r) => sum + r.betAmount);
     final totalWin = _results.fold<double>(0, (sum, r) => sum + r.winAmount);
-    final profit = totalWin - totalBet;
+    final profit = totalBet - totalWin;
     final winCount = CheckService.getWinCount(_results);
     final loseCount = CheckService.getLoseCount(_results);
 
     return Container(margin: const EdgeInsets.symmetric(horizontal: 16), padding: const EdgeInsets.all(18), decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(AppStyles.radiusSm), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4)]), child: Column(children: [
       Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-        _buildStatItem('总投注', '${totalBet.toStringAsFixed(1)}元', AppColors.primary),
-        _buildStatItem('总中奖', '${totalWin.toStringAsFixed(1)}元', AppColors.success),
+        _buildStatItem('总投入', '${totalBet.toStringAsFixed(1)}元', AppColors.primary),
+        _buildStatItem('总赔付', '${totalWin.toStringAsFixed(1)}元', AppColors.danger),
         _buildStatItem(profit >= 0 ? '盈利' : '亏损', '${profit.abs().toStringAsFixed(1)}元', profit >= 0 ? AppColors.success : AppColors.danger),
       ]),
       const Divider(height: 24),
