@@ -189,7 +189,7 @@ class _StatsPageState extends State<StatsPage> {
                 decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(4)),
                 child: Text('${b.number}${b.multiplier != 1.0 ? "×${b.multiplier}" : ""}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: color, fontFamily: 'monospace')),
               )).toList()),
-              if (bets.length > 20) Padding(padding: const EdgeInsets.only(top: 4), child: Text('...还有${bets.length - 20}条', style: TextStyle(fontSize: 10, color: AppColors.textLight)))),
+              if (bets.length > 20) Padding(padding: const EdgeInsets.only(top: 4), child: Text('...还有${bets.length - 20}条', style: TextStyle(fontSize: 10, color: AppColors.textLight))),
             ]),
           );
         }),
