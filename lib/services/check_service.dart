@@ -31,6 +31,11 @@ class CheckService {
     'g3_6': 11.11, 'g3_7': 7.94, 'g3_8': 5.95, 'g3_9': 4.76, 'g3_all': 3.70,
     'g6_4': 41.67, 'g6_5': 16.67, 'g6_6': 8.33, 'g6_7': 4.76,
     'g6_8': 2.97, 'g6_9': 2.08, 'g6_all': 1.39,
+    'g6_dt2': 1500.0, 'g6_dt3': 500.0, 'g6_dt4': 250.0, 'g6_dt5': 150.0,
+    'g6_dt6': 100.0, 'g6_dt7': 70.0, 'g6_dt8': 50.0, 'g6_dt9': 40.0,
+    'g3_dt2': 750.0, 'g3_dt3': 500.0, 'g3_dt4': 370.0, 'g3_dt5': 300.0,
+    'g3_dt6': 250.0, 'g3_dt7': 200.0, 'g3_dt8': 185.0, 'g3_dt9': 160.0,
+    'baozi_single': 1700.0, 'baozi_all': 850.0,
     'fs_3': 333.33, 'fs_4': 125.0, 'fs_5': 50.0, 'fs_6': 22.22,
     'fs_7': 10.71, 'fs_8': 5.49, 'fs_9': 2.96, 'fs_all': 1.0,
     'span0': 1000.0, 'span1': 200.0, 'span2': 66.67, 'span3': 33.33,
@@ -100,6 +105,32 @@ class CheckService {
           final drawDigits = nums.split('').toSet();
           isWin = betDigits.every((d) => drawDigits.contains(d));
         }
+        break;
+      case var pt when pt.startsWith('g6_dt'):
+        if (DrawRecord.getFormType(nums) == '组六') {
+          final parts = bet.number.split(':');
+          if (parts.length == 2) {
+            final dan = parts[0];
+            final tuo = parts[1].split('').toSet();
+            isWin = nums.contains(dan) && tuo.every((d) => nums.contains(d));
+          }
+        }
+        break;
+      case var pt when pt.startsWith('g3_dt'):
+        if (DrawRecord.getFormType(nums) == '组三') {
+          final parts = bet.number.split(':');
+          if (parts.length == 2) {
+            final dan = parts[0];
+            final tuo = parts[1].split('').toSet();
+            isWin = nums.contains(dan) && tuo.every((d) => nums.contains(d));
+          }
+        }
+        break;
+      case 'baozi_single':
+        isWin = bet.number == nums && nums[0] == nums[1] && nums[1] == nums[2];
+        break;
+      case 'baozi_all':
+        isWin = nums[0] == nums[1] && nums[1] == nums[2];
         break;
       case var pt when pt.startsWith('span'):
         final spanVal = int.tryParse(pt.replaceAll('span', '')) ?? 0;

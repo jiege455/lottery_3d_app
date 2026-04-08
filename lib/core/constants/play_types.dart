@@ -76,7 +76,46 @@ class PlayTypes {
     PlayTypeConfig(code: 'g6_9', name: '组六9码', category: '组六复式',
       ruleText: '输入9个不同数字，生成所有组六组合', example: '123456789', color: Color(0xFF059669), baseAmount: 10.0),
     PlayTypeConfig(code: 'g6_all', name: '组六全包', category: '组六复式',
-      ruleText: '全包所有组六组合（120注）', example: '-', color: Color(0xFF059669), baseAmount: 10.0),
+      ruleText: '全包所有组六组合（120 注）', example: '-', color: Color(0xFF059669), baseAmount: 10.0),
+
+    PlayTypeConfig(code: 'g6_dt2', name: '组六 1 拖 2', category: '胆拖玩法',
+      ruleText: '输入 1 个胆码 +2 个拖码，如"1:23"', example: '1:23', color: Color(0xFF10B981), baseAmount: 10.0),
+    PlayTypeConfig(code: 'g6_dt3', name: '组六 1 拖 3', category: '胆拖玩法',
+      ruleText: '输入 1 个胆码 +3 个拖码，如"1:234"', example: '1:234', color: Color(0xFF10B981), baseAmount: 10.0),
+    PlayTypeConfig(code: 'g6_dt4', name: '组六 1 拖 4', category: '胆拖玩法',
+      ruleText: '输入 1 个胆码 +4 个拖码，如"1:2345"', example: '1:2345', color: Color(0xFF10B981), baseAmount: 10.0),
+    PlayTypeConfig(code: 'g6_dt5', name: '组六 1 拖 5', category: '胆拖玩法',
+      ruleText: '输入 1 个胆码 +5 个拖码，如"1:23456"', example: '1:23456', color: Color(0xFF10B981), baseAmount: 10.0),
+    PlayTypeConfig(code: 'g6_dt6', name: '组六 1 拖 6', category: '胆拖玩法',
+      ruleText: '输入 1 个胆码 +6 个拖码，如"1:234567"', example: '1:234567', color: Color(0xFF10B981), baseAmount: 10.0),
+    PlayTypeConfig(code: 'g6_dt7', name: '组六 1 拖 7', category: '胆拖玩法',
+      ruleText: '输入 1 个胆码 +7 个拖码，如"1:2345678"', example: '1:2345678', color: Color(0xFF10B981), baseAmount: 10.0),
+    PlayTypeConfig(code: 'g6_dt8', name: '组六 1 拖 8', category: '胆拖玩法',
+      ruleText: '输入 1 个胆码 +8 个拖码，如"1:23456789"', example: '1:23456789', color: Color(0xFF10B981), baseAmount: 10.0),
+    PlayTypeConfig(code: 'g6_dt9', name: '组六 1 拖 9', category: '胆拖玩法',
+      ruleText: '输入 1 个胆码 +9 个拖码', example: '1:234567890', color: Color(0xFF10B981), baseAmount: 10.0),
+
+    PlayTypeConfig(code: 'g3_dt2', name: '组三 1 拖 2', category: '胆拖玩法',
+      ruleText: '输入 1 个胆码 +2 个拖码，如"1:23"', example: '1:23', color: Color(0xFFF59E0B), baseAmount: 10.0),
+    PlayTypeConfig(code: 'g3_dt3', name: '组三 1 拖 3', category: '胆拖玩法',
+      ruleText: '输入 1 个胆码 +3 个拖码，如"1:234"', example: '1:234', color: Color(0xFFF59E0B), baseAmount: 10.0),
+    PlayTypeConfig(code: 'g3_dt4', name: '组三 1 拖 4', category: '胆拖玩法',
+      ruleText: '输入 1 个胆码 +4 个拖码，如"1:2345"', example: '1:2345', color: Color(0xFFF59E0B), baseAmount: 10.0),
+    PlayTypeConfig(code: 'g3_dt5', name: '组三 1 拖 5', category: '胆拖玩法',
+      ruleText: '输入 1 个胆码 +5 个拖码，如"1:23456"', example: '1:23456', color: Color(0xFFF59E0B), baseAmount: 10.0),
+    PlayTypeConfig(code: 'g3_dt6', name: '组三 1 拖 6', category: '胆拖玩法',
+      ruleText: '输入 1 个胆码 +6 个拖码，如"1:234567"', example: '1:234567', color: Color(0xFFF59E0B), baseAmount: 10.0),
+    PlayTypeConfig(code: 'g3_dt7', name: '组三 1 拖 7', category: '胆拖玩法',
+      ruleText: '输入 1 个胆码 +7 个拖码，如"1:2345678"', example: '1:2345678', color: Color(0xFFF59E0B), baseAmount: 10.0),
+    PlayTypeConfig(code: 'g3_dt8', name: '组三 1 拖 8', category: '胆拖玩法',
+      ruleText: '输入 1 个胆码 +8 个拖码，如"1:23456789"', example: '1:23456789', color: Color(0xFFF59E0B), baseAmount: 10.0),
+    PlayTypeConfig(code: 'g3_dt9', name: '组三 1 拖 9', category: '胆拖玩法',
+      ruleText: '输入 1 个胆码 +9 个拖码', example: '1:234567890', color: Color(0xFFF59E0B), baseAmount: 10.0),
+
+    PlayTypeConfig(code: 'baozi_single', name: '豹子直选', category: '豹子',
+      ruleText: '输入 3 位相同数字，顺序需一致', example: '111,222', color: Color(0xFFEF4444), baseAmount: 10.0),
+    PlayTypeConfig(code: 'baozi_all', name: '豹子全包', category: '豹子',
+      ruleText: '全包所有豹子组合（10 注）', example: '-', color: Color(0xFFEF4444), baseAmount: 10.0),
 
     PlayTypeConfig(code: 'fs_3', name: '复式3码', category: '通用复式',
       ruleText: '输入3个数字，包含直选和组选', example: '158', color: Color(0xFF0D9488), baseAmount: 10.0),
@@ -136,7 +175,7 @@ class PlayTypes {
     return all.where((p) => p.category == category).toList();
   }
 
-  static const List<String> categories = ['基础三码', '定位', '双飞', '组三复式', '组六复式', '通用复式', '跨度', '其他'];
+  static const List<String> categories = ['基础三码', '定位', '双飞', '组三复式', '组六复式', '胆拖玩法', '豹子', '通用复式', '跨度', '其他'];
 
   static Set<String> get wholeLineCodes =>
       all.where((p) => p.isWholeLine).map((p) => p.code).toSet();
