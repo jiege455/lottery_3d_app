@@ -36,8 +36,80 @@ class BatchParser {
       map['${i}跨:'] = 'span$i';
       map['${i}跨：'] = 'span$i';
     }
+    map['组选:'] = 'group_composite';
+    map['组选：'] = 'group_composite';
     return map;
   }();
+
+  static bool _isPosCompositeFormat(String line) {
+    final clean = line.replaceAll(_multiplierRegex, '').trim();
+    return RegExp(r'百\d+十\d+个\d+').hasMatch(clean);
+  }
+
+  static List<ParsedItem> _parsePosComposite(String line, {String? forcePlayType, double defaultMultiplier = 1.0}) {
+    final mult = _extractMultiplier(line);
+    final cleanLine = line.replaceAll(_multiplierRegex, '').trim();
+
+    final baiMatch = RegExp(r'百(\d+)').firstMatch(cleanLine);
+    final shiMatch = RegExp(r'十(\d+)').firstMatch(cleanLine);
+    final geMatch = RegExp(r'个(\d+)').firstMatch(cleanLine);
+
+    if (baiMatch == null || shiMatch == null || geMatch == null) return [];
+
+    final baiDigits = baiMatch.group(1)!.split('').toSet().toList()..sort();
+    final shiDigits = shiMatch.group(1)!.split('').toSet().toList()..sort();
+    final geDigits = geMatch.group(1)!.split('').toSet().toList()..sort();
+
+    final items = <ParsedItem>[];
+    final effectiveMultiplier = mult ?? defaultMultiplier;
+
+    final isGroup = forcePlayType == 'group3' || forcePlayType == 'group6' || forcePlayType == 'group_composite';
+
+    if (!isGroup) {
+      final config = PlayTypes.getByCode('single')!;
+      for (final b in baiDigits) {
+        for (final s in shiDigits) {
+          for (final g in geDigits) {
+            items.add(ParsedItem(
+              number: '$b$s$g',
+              playType: 'single',
+              playTypeName: '直选',
+              multiplier: effectiveMultiplier,
+              color: config.color,
+              baseAmount: config.baseAmount,
+            ));
+          }
+        }
+      }
+    } else {
+      final seen = <String>{};
+      for (final b in baiDigits) {
+        for (final s in shiDigits) {
+          for (final g in geDigits) {
+            final sorted = [b, s, g]..sort();
+            final key = sorted.join();
+            if (seen.contains(key)) continue;
+            seen.add(key);
+
+            final hasDup = sorted[0] == sorted[1] || sorted[1] == sorted[2];
+            final actualType = hasDup ? 'group3' : 'group6';
+            final config = PlayTypes.getByCode(actualType)!;
+
+            items.add(ParsedItem(
+              number: key,
+              playType: actualType,
+              playTypeName: hasDup ? '组三' : '组六',
+              multiplier: effectiveMultiplier,
+              color: config.color,
+              baseAmount: config.baseAmount,
+            ));
+          }
+        }
+      }
+    }
+
+    return items;
+  }
 
   static List<ParsedItem> parse(String input, {String? forcePlayType, double defaultMultiplier = 1.0}) {
     if (input.trim().isEmpty) return [];
@@ -53,6 +125,11 @@ class BatchParser {
   static List<ParsedItem> _parseLine(String line, {String? forcePlayType, double defaultMultiplier = 1.0}) {
     final config = forcePlayType != null ? PlayTypes.getByCode(forcePlayType) : null;
     if (config != null && config.isWholeLine) return [_createItem(line, config, defaultMultiplier)];
+
+    if (_isPosCompositeFormat(line)) {
+      return _parsePosComposite(line, forcePlayType: forcePlayType, defaultMultiplier: defaultMultiplier);
+    }
+
     final prefixMatch = _detectPrefix(line);
     if (prefixMatch != null) return _parseWithPrefix(line, prefixMatch, defaultMultiplier);
     if (forcePlayType != null) return _splitAndCreate(line, PlayTypes.getByCode(forcePlayType)!, defaultMultiplier);
@@ -76,8 +153,21 @@ class BatchParser {
   static List<ParsedItem> _parseWithPrefix(String line, String playTypeCode, double defaultMultiplier) {
     final colonIndex = line.indexOf(RegExp('[：:]'));
     final content = line.substring(colonIndex + 1).trim();
+
+    if (playTypeCode == 'group_composite') {
+      if (_isPosCompositeFormat(content)) {
+        return _parsePosComposite(content, forcePlayType: 'group_composite', defaultMultiplier: defaultMultiplier);
+      }
+      return [];
+    }
+
     final config = PlayTypes.getByCode(playTypeCode);
     if (config == null) return _splitAndCreate(content, PlayTypes.getByCode('single')!, defaultMultiplier);
+
+    if (_isPosCompositeFormat(content)) {
+      return _parsePosComposite(content, forcePlayType: playTypeCode, defaultMultiplier: defaultMultiplier);
+    }
+
     if (config.isWholeLine) return [_createItem(content, config, defaultMultiplier)];
     return _splitAndCreate(content, config, defaultMultiplier);
   }
