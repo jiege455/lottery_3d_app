@@ -14,12 +14,12 @@ class PlayTypeAmountSettingsPage extends StatefulWidget {
 
 class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage> {
   final Map<String, TextEditingController> _amountControllers = {};
-  final Map<String, TextEditingController> _payoutControllers = {};
+  final Map<String, TextEditingController> _winAmountControllers = {};
   final TextEditingController _customCodeController = TextEditingController();
   final TextEditingController _customNameController = TextEditingController();
   final TextEditingController _customCategoryController = TextEditingController();
   final TextEditingController _customAmountController = TextEditingController();
-  final TextEditingController _customPayoutController = TextEditingController();
+  final TextEditingController _customWinAmountController = TextEditingController();
   final TextEditingController _customColorController = TextEditingController(text: '#4F46E5');
 
   @override
@@ -27,7 +27,7 @@ class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage>
     super.initState();
     for (final pt in PlayTypes.all) {
       _amountControllers[pt.code] = TextEditingController();
-      _payoutControllers[pt.code] = TextEditingController();
+      _winAmountControllers[pt.code] = TextEditingController();
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadAmounts());
   }
@@ -36,17 +36,17 @@ class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage>
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     for (final pt in PlayTypes.all) {
       final amount = settings.getPlayTypeAmount(pt.code);
-      final payoutRate = settings.getPlayTypePayoutRate(pt.code);
+      final winAmount = settings.getPlayTypeWinAmount(pt.code);
       _amountControllers[pt.code]!.text = amount.toStringAsFixed(1);
-      _payoutControllers[pt.code]!.text = payoutRate.toStringAsFixed(2);
+      _winAmountControllers[pt.code]!.text = winAmount.toStringAsFixed(1);
     }
   }
 
   @override
   void dispose() {
     for (final controller in _amountControllers.values) controller.dispose();
-    for (final controller in _payoutControllers.values) controller.dispose();
-    for (final controller in [_customCodeController, _customNameController, _customCategoryController, _customAmountController, _customPayoutController, _customColorController]) controller.dispose();
+    for (final controller in _winAmountControllers.values) controller.dispose();
+    for (final controller in [_customCodeController, _customNameController, _customCategoryController, _customAmountController, _customWinAmountController, _customColorController]) controller.dispose();
     super.dispose();
   }
 
@@ -59,7 +59,7 @@ class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage>
           TextField(controller: _customNameController, decoration: const InputDecoration(labelText: '玩法名称', hintText: '如：自定义玩法')),
           TextField(controller: _customCategoryController, decoration: const InputDecoration(labelText: '所属分类', hintText: '如：自定义')),
           TextField(controller: _customAmountController, decoration: const InputDecoration(labelText: '投注金额', hintText: '2.0'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
-          TextField(controller: _customPayoutController, decoration: const InputDecoration(labelText: '赔付倍率', hintText: '0 表示使用默认'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+          TextField(controller: _customWinAmountController, decoration: const InputDecoration(labelText: '中奖金额', hintText: '0 表示使用默认'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
           TextField(controller: _customColorController, decoration: const InputDecoration(labelText: '颜色代码', hintText: '#4F46E5')),
         ]),
       ),
@@ -72,16 +72,16 @@ class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage>
               return;
             }
             final amount = double.tryParse(_customAmountController.text) ?? 2.0;
-            final payoutRate = double.tryParse(_customPayoutController.text) ?? 0.0;
+            final winAmount = double.tryParse(_customWinAmountController.text) ?? 0.0;
             Provider.of<SettingsProvider>(context, listen: false).addCustomPlayType(
-              _customCodeController.text, _customNameController.text, _customCategoryController.text, amount, payoutRate, _customColorController.text);
+              _customCodeController.text, _customNameController.text, _customCategoryController.text, amount, winAmount, _customColorController.text);
             Navigator.pop(ctx);
             ToastUtil.success(context, '添加成功');
             _customCodeController.clear();
             _customNameController.clear();
             _customCategoryController.clear();
             _customAmountController.clear();
-            _customPayoutController.clear();
+            _customWinAmountController.clear();
           },
           child: const Text('添加'),
         ),
@@ -91,12 +91,12 @@ class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage>
 
   Future<void> _saveAmount(String playType) async {
     final amount = double.tryParse(_amountControllers[playType]!.text);
-    final payoutRate = double.tryParse(_payoutControllers[playType]!.text) ?? 0.0;
+    final winAmount = double.tryParse(_winAmountControllers[playType]!.text) ?? 0.0;
     if (amount == null || amount <= 0) {
       ToastUtil.warning(context, '请输入有效金额');
       return;
     }
-    await Provider.of<SettingsProvider>(context, listen: false).updatePlayTypeAmount(playType, amount, payoutRate);
+    await Provider.of<SettingsProvider>(context, listen: false).updatePlayTypeAmount(playType, amount, winAmount);
   }
 
   Future<void> _resetAll() async {
@@ -237,7 +237,7 @@ class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage>
                 Container(padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1), decoration: BoxDecoration(color: AppColors.success.withOpacity(0.2), borderRadius: BorderRadius.circular(4)), child: Text('自定义', style: TextStyle(fontSize: 9, color: AppColors.success))),
               ],
             ]),
-            Text('默认：${defaultAmount.toStringAsFixed(1)}元', style: TextStyle(fontSize: 11, color: AppColors.textLight)),
+            Text('默认：${defaultAmount.toStringAsFixed(1)}元/注', style: TextStyle(fontSize: 11, color: AppColors.textLight)),
           ]),
         ),
         if (isCustom && customData != null) ...[
@@ -252,7 +252,7 @@ class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage>
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 14),
-              decoration: InputDecoration(isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6), labelText: '金额', labelStyle: TextStyle(fontSize: 10), suffixText: '元', suffixStyle: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+              decoration: InputDecoration(isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6), labelText: '投注', labelStyle: TextStyle(fontSize: 10), suffixText: '元', suffixStyle: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
               onChanged: (_) => setState(() {}),
               onSubmitted: (_) => _saveAmount(code),
             ),
@@ -261,11 +261,11 @@ class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage>
           SizedBox(
             width: 70,
             child: TextField(
-              controller: _payoutControllers[code],
+              controller: _winAmountControllers[code],
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 14),
-              decoration: InputDecoration(isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6), labelText: '赔付', labelStyle: TextStyle(fontSize: 10), suffixText: '倍', suffixStyle: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+              decoration: InputDecoration(isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6), labelText: '中奖', labelStyle: TextStyle(fontSize: 10), suffixText: '元', suffixStyle: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
               onChanged: (_) => setState(() {}),
               onSubmitted: (_) => _saveAmount(code),
             ),

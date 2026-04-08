@@ -112,18 +112,18 @@ class _CheckPageState extends State<CheckPage> {
     Future.delayed(const Duration(milliseconds: 300), () {
       if (!mounted) return;
       final settings = Provider.of<SettingsProvider>(context, listen: false);
-      double totalPayoutRate = 0;
+      double totalWinAmount = 0;
       if (bets.isNotEmpty) {
         final playTypes = bets.map((b) => b.playType).toSet();
         for (final pt in playTypes) {
-          final rate = settings.getPlayTypePayoutRate(pt);
-          if (rate > 0) {
-            totalPayoutRate = rate;
+          final winAmt = settings.getPlayTypeWinAmount(pt);
+          if (winAmt > 0) {
+            totalWinAmount = winAmt;
             break;
           }
         }
       }
-      final results = CheckService.checkAll(bets, draw, totalPayoutRate);
+      final results = CheckService.checkAll(bets, draw, totalWinAmount);
       setState(() {
         _results = results;
         _checking = false;

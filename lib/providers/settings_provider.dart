@@ -9,7 +9,7 @@ class SettingsProvider with ChangeNotifier {
   bool _isLoaded = false;
   Map<String, double> _playTypeAmounts = {};
   Map<String, double> _defaultAmounts = {};
-  Map<String, double> _playTypePayoutRates = {};
+  Map<String, double> _playTypeWinAmounts = {};
   List<Map<String, dynamic>> _customPlayTypes = [];
 
   AppSettings get settings => _settings;
@@ -17,7 +17,7 @@ class SettingsProvider with ChangeNotifier {
   int get defaultLotteryType => _settings.defaultLotteryType;
   bool get isLoaded => _isLoaded;
   Map<String, double> get playTypeAmounts => _playTypeAmounts;
-  Map<String, double> get playTypePayoutRates => _playTypePayoutRates;
+  Map<String, double> get playTypeWinAmounts => _playTypeWinAmounts;
   List<Map<String, dynamic>> get customPlayTypes => _customPlayTypes;
 
   SettingsProvider() {
@@ -34,15 +34,15 @@ class SettingsProvider with ChangeNotifier {
     return _playTypeAmounts[playType] ?? _defaultAmounts[playType] ?? 2.0;
   }
 
-  double getPlayTypePayoutRate(String playType) {
-    return _playTypePayoutRates[playType] ?? 0.0;
+  double getPlayTypeWinAmount(String playType) {
+    return _playTypeWinAmounts[playType] ?? 0.0;
   }
 
   Future<void> loadSettings() async {
     try {
       _settings = await _db.getSettings();
       _playTypeAmounts = await _db.getPlayTypeAmounts();
-      _playTypePayoutRates = await _db.getPlayTypePayoutRates();
+      _playTypeWinAmounts = await _db.getPlayTypeWinAmounts();
       _customPlayTypes = await _db.getCustomPlayTypes();
       _isLoaded = true;
       notifyListeners();
@@ -86,11 +86,11 @@ class SettingsProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updatePlayTypeAmount(String playType, double amount, double payoutRate) async {
+  Future<void> updatePlayTypeAmount(String playType, double amount, double winAmount) async {
     try {
-      await _db.setPlayTypeAmount(playType, amount, payoutRate);
+      await _db.setPlayTypeAmount(playType, amount, winAmount);
       _playTypeAmounts[playType] = amount;
-      _playTypePayoutRates[playType] = payoutRate;
+      _playTypeWinAmounts[playType] = winAmount;
       notifyListeners();
     } catch (e) {
       print('SettingsProvider.updatePlayTypeAmount error: $e');
@@ -102,7 +102,7 @@ class SettingsProvider with ChangeNotifier {
     try {
       await _db.resetPlayTypeAmounts();
       _playTypeAmounts.clear();
-      _playTypePayoutRates.clear();
+      _playTypeWinAmounts.clear();
       notifyListeners();
     } catch (e) {
       print('SettingsProvider.resetPlayTypeAmounts error: $e');
@@ -110,12 +110,12 @@ class SettingsProvider with ChangeNotifier {
     }
   }
 
-  Future<void> addCustomPlayType(String code, String name, String category, double amount, double payoutRate, String color) async {
+  Future<void> addCustomPlayType(String code, String name, String category, double amount, double winAmount, String color) async {
     try {
-      await _db.addCustomPlayType(code, name, category, amount, payoutRate, color);
+      await _db.addCustomPlayType(code, name, category, amount, winAmount, color);
       _customPlayTypes = await _db.getCustomPlayTypes();
       _playTypeAmounts[code] = amount;
-      _playTypePayoutRates[code] = payoutRate;
+      _playTypeWinAmounts[code] = winAmount;
       notifyListeners();
     } catch (e) {
       print('SettingsProvider.addCustomPlayType error: $e');
@@ -128,7 +128,7 @@ class SettingsProvider with ChangeNotifier {
       await _db.deleteCustomPlayType(code);
       _customPlayTypes = await _db.getCustomPlayTypes();
       _playTypeAmounts.remove(code);
-      _playTypePayoutRates.remove(code);
+      _playTypeWinAmounts.remove(code);
       notifyListeners();
     } catch (e) {
       print('SettingsProvider.deleteCustomPlayType error: $e');

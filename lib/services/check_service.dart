@@ -41,11 +41,11 @@ class CheckService {
     'oddeven': 2.0,
   };
 
-  static List<CheckResult> checkAll(List<BetRecord> bets, DrawRecord draw, [double customPayoutRate = 0.0]) {
-    return bets.map((bet) => checkSingle(bet, draw, customPayoutRate)).toList();
+  static List<CheckResult> checkAll(List<BetRecord> bets, DrawRecord draw, [double customWinAmount = 0.0]) {
+    return bets.map((bet) => checkSingle(bet, draw, customWinAmount)).toList();
   }
 
-  static CheckResult checkSingle(BetRecord bet, DrawRecord draw, [double customPayoutRate = 0.0]) {
+  static CheckResult checkSingle(BetRecord bet, DrawRecord draw, [double customWinAmount = 0.0]) {
     final nums = draw.numbers;
     if (nums.length != 3 || bet.number.isEmpty) {
       return CheckResult(bet: bet, isWin: false, winType: '', winAmount: 0, betAmount: bet.multiplier * bet.baseAmount);
@@ -129,8 +129,8 @@ class CheckService {
 
     double winAmount = 0;
     if (isWin) {
-      if (customPayoutRate > 0) {
-        winAmount = bet.multiplier * bet.baseAmount * customPayoutRate;
+      if (customWinAmount > 0) {
+        winAmount = bet.multiplier * customWinAmount;
       } else {
         winAmount = bet.multiplier * bet.baseAmount * baseOdds;
       }

@@ -75,7 +75,7 @@ class DatabaseHelper {
       CREATE TABLE play_type_amounts (
         play_type TEXT PRIMARY KEY,
         amount REAL NOT NULL,
-        payout_rate REAL DEFAULT 0.0
+        win_amount REAL DEFAULT 0.0
       )
     ''');
     await db.execute('''
@@ -85,7 +85,7 @@ class DatabaseHelper {
         name TEXT NOT NULL,
         category TEXT NOT NULL,
         amount REAL DEFAULT 2.0,
-        payout_rate REAL DEFAULT 0.0,
+        win_amount REAL DEFAULT 0.0,
         color TEXT DEFAULT '#4F46E5',
         is_enabled INTEGER DEFAULT 1,
         created_time TEXT NOT NULL
@@ -315,29 +315,29 @@ class DatabaseHelper {
     }
   }
 
-  Future<Map<String, double>> getPlayTypePayoutRates() async {
+  Future<Map<String, double>> getPlayTypeWinAmounts() async {
     try {
       final db = await database;
       final result = await db.query('play_type_amounts');
-      Map<String, double> rates = {};
+      Map<String, double> amounts = {};
       for (final row in result) {
         final playType = row['play_type'] as String?;
-        final rate = row['payout_rate'] as double?;
-        if (playType != null && rate != null) {
-          rates[playType] = rate;
+        final winAmount = row['win_amount'] as double?;
+        if (playType != null && winAmount != null) {
+          amounts[playType] = winAmount;
         }
       }
-      return rates;
+      return amounts;
     } catch (e) {
-      print('getPlayTypePayoutRates error: $e');
+      print('getPlayTypeWinAmounts error: $e');
       return {};
     }
   }
 
-  Future<void> setPlayTypeAmount(String playType, double amount, double payoutRate) async {
+  Future<void> setPlayTypeAmount(String playType, double amount, double winAmount) async {
     try {
       final db = await database;
-      await db.insert('play_type_amounts', {'play_type': playType, 'amount': amount, 'payout_rate': payoutRate}, conflictAlgorithm: ConflictAlgorithm.replace);
+      await db.insert('play_type_amounts', {'play_type': playType, 'amount': amount, 'win_amount': winAmount}, conflictAlgorithm: ConflictAlgorithm.replace);
     } catch (e) {
       print('setPlayTypeAmount error: $e');
     }
@@ -362,7 +362,7 @@ class DatabaseHelper {
     }
   }
 
-  Future<void> addCustomPlayType(String code, String name, String category, double amount, double payoutRate, String color) async {
+  Future<void> addCustomPlayType(String code, String name, String category, double amount, double winAmount, String color) async {
     try {
       final db = await database;
       await db.insert('custom_play_types', {
@@ -370,7 +370,7 @@ class DatabaseHelper {
         'name': name,
         'category': category,
         'amount': amount,
-        'payout_rate': payoutRate,
+        'win_amount': winAmount,
         'color': color,
         'is_enabled': 1,
         'created_time': DateTime.now().toIso8601String(),
@@ -378,7 +378,7 @@ class DatabaseHelper {
       await db.insert('play_type_amounts', {
         'play_type': code,
         'amount': amount,
-        'payout_rate': payoutRate,
+        'win_amount': winAmount,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     } catch (e) {
       print('addCustomPlayType error: $e');
