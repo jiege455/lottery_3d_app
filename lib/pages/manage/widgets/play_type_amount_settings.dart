@@ -55,7 +55,7 @@ class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage>
       title: const Text('添加自定义玩法'),
       content: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: _customCodeController, decoration: const InputDecoration(labelText: '玩法代码', hintText: '如：custom1'), helperText: '英文或数字，不能与现有玩法重复'),
+          TextField(controller: _customCodeController, decoration: InputDecoration(labelText: '玩法代码', hintText: '如：custom1', helperText: '英文或数字，不能与现有玩法重复')),
           TextField(controller: _customNameController, decoration: const InputDecoration(labelText: '玩法名称', hintText: '如：自定义玩法')),
           TextField(controller: _customCategoryController, decoration: const InputDecoration(labelText: '所属分类', hintText: '如：自定义')),
           TextField(controller: _customAmountController, decoration: const InputDecoration(labelText: '投注金额', hintText: '2.0'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),

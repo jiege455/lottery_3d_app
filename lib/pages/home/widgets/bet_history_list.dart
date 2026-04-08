@@ -195,7 +195,7 @@ class _BetHistoryListState extends State<BetHistoryList> {
           onPressed: () async {
             Navigator.pop(ctx);
             for (final bet in bets) {
-              if (bet.id != null) await _deleteBet(bet.id!);
+              if (bet.id != null) { _deleteBet(bet.id!); }
             }
             ToastUtil.success(context, '已删除批次');
           },
@@ -203,16 +203,5 @@ class _BetHistoryListState extends State<BetHistoryList> {
         ),
       ],
     ));
-  }
-
-  String _getCategoryByPlayType(String playType) {
-    if (['single', 'group3', 'group6'].contains(playType)) return 'basic';
-    if (['dan', 'pos1', 'pos2'].contains(playType)) return 'position';
-    if (playType.startsWith('shuangfei')) return 'shuangfei';
-    if (playType.startsWith('g3_') || playType == 'g3_all') return 'g3';
-    if (playType.startsWith('g6_') || playType == 'g6_all') return 'g6';
-    if (playType.startsWith('fs_') || playType == 'fs_all') return 'fs';
-    if (playType.startsWith('span')) return 'span';
-    return 'other';
   }
 }
