@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/play_types.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../providers/settings_provider.dart';
 import '../../../services/check_service.dart';
 import '../../../widgets/toast.dart';

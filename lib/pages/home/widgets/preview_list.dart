@@ -6,8 +6,7 @@ import '../../../providers/settings_provider.dart';
 
 class PreviewList extends StatelessWidget {
   final List<ParsedItem> items;
-  final ValueChanged<double>? onAmountChanged;
-  const PreviewList({super.key, required this.items, this.onAmountChanged});
+  const PreviewList({super.key, required this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -50,14 +49,14 @@ class PreviewList extends StatelessWidget {
   }
 
   Widget _buildItem(BuildContext context, int index, ParsedItem item) {
-    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final settings = Provider.of<SettingsProvider>(context);
     final currentAmount = settings.getPlayTypeAmount(item.playType);
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.primaryLight.withOpacity(0.3),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: AppColors.border.withOpacity(0.3)),
       ),

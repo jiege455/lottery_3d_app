@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../models/bet_record.dart';
-import '../../../models/draw_record.dart';
-import '../../../providers/bet_provider.dart';
-import '../../../providers/settings_provider.dart';
-import '../../../services/check_service.dart';
-import '../../../services/lottery_api_service.dart';
-import '../../../services/db_service.dart';
-import '../../../widgets/toast.dart';
+import '../../core/theme/app_theme.dart';
+import '../../models/bet_record.dart';
+import '../../models/draw_record.dart';
+import '../../providers/bet_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../services/check_service.dart';
+import '../../services/lottery_api_service.dart';
+import '../../services/db_service.dart';
+import '../../widgets/toast.dart';
 
 class CheckPage extends StatefulWidget {
   const CheckPage({super.key});

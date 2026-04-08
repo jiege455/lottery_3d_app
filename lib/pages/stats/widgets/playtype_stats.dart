@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/theme/app_theme.dart';
-import '../../../../core/constants/play_types.dart';
-import '../../../../providers/bet_provider.dart';
-import '../../../../providers/settings_provider.dart';
-import '../../../../services/db_service.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/constants/play_types.dart';
+import '../../../providers/bet_provider.dart';
+import '../../../providers/settings_provider.dart';
+import '../../../services/db_service.dart';
 
 class PlayTypeStats extends StatefulWidget {
   const PlayTypeStats({super.key});
