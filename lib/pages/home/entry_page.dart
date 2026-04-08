@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/constants/play_types.dart';
 import '../../../core/utils/batch_parser.dart';
 import '../../../models/bet_record.dart';
 import '../../../providers/bet_provider.dart';
@@ -10,6 +9,7 @@ import '../../../providers/settings_provider.dart';
 import 'widgets/play_type_chips.dart';
 import 'widgets/rule_hint_box.dart';
 import 'widgets/batch_input.dart';
+import 'widgets/odds_selector.dart';
 import 'widgets/preview_list.dart';
 import 'widgets/bet_history_list.dart';
 import '../../../widgets/toast.dart';
@@ -154,6 +154,9 @@ class _EntryPageState extends State<EntryPage> {
             PlayTypeChips(selectedPlayType: _selectedPlayType, onChanged: (code) { setState(() => _selectedPlayType = code); _applyCustomAmounts(); }),
             RuleHintBox(playTypeCode: _selectedPlayType),
             BatchInput(controller: _inputController, onChanged: _onInputChanged),
+            const SizedBox(height: 12),
+            OddsSelector(selectedPlayType: _selectedPlayType, onChanged: (code) { setState(() => _selectedPlayType = code); _applyCustomAmounts(); }),
+            const SizedBox(height: 12),
             PreviewList(items: _parsedItems),
             if (_parsedItems.isNotEmpty) ...[
               const SizedBox(height: 8),

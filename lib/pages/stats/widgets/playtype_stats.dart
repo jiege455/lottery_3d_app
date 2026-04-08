@@ -60,7 +60,11 @@ class _PlayTypeStatsState extends State<PlayTypeStats> {
 
     final sorted = _stats.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     final maxVal = sorted.isNotEmpty ? sorted.first.value : 1;
-    final totalAmount = _stats.entries.fold<double>(0, (sum, e) => sum + e.value * 2);
+    final totalAmount = _stats.entries.fold<double>(0, (sum, e) {
+      final config = PlayTypes.getByCode(e.key);
+      final baseAmount = config?.baseAmount ?? 2.0;
+      return sum + e.value * baseAmount;
+    });
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -86,7 +90,8 @@ class _PlayTypeStatsState extends State<PlayTypeStats> {
     final ratio = maxVal > 0 ? count / maxVal : 0;
     final name = _getPlayTypeName(playType);
     final color = _getPlayTypeColor(playType);
-    final amount = count * 2;
+    final baseAmount = PlayTypes.getByCode(playType)?.baseAmount ?? 2.0;
+    final amount = (count * baseAmount).toStringAsFixed(1);
 
     return Row(children: [
       Container(
@@ -98,7 +103,7 @@ class _PlayTypeStatsState extends State<PlayTypeStats> {
       const SizedBox(width: 8),
       Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(4), child: LinearProgressIndicator(value: ratio.toDouble(), minHeight: 8, backgroundColor: AppColors.border, valueColor: AlwaysStoppedAnimation(color)))),
       const SizedBox(width: 8),
-      SizedBox(width: 72, child: Text('$count注 ${amount}元(${pct.toStringAsFixed(1)}%)', style: TextStyle(fontSize: 10, color: AppColors.textSecondary), textAlign: TextAlign.right)),
+      SizedBox(width: 72, child: Text('$count注 ${amount}元(${pct.toStringAsFixed(1)}%)', style: TextStyle(fontSize: 10, color: AppColors.textSecondary), textAlign: TextAlign.right, overflow: TextOverflow.ellipsis, maxLines: 1)),
     ]);
   }
 }

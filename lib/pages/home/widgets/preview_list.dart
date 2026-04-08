@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/utils/batch_parser.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../providers/settings_provider.dart';
 
 class PreviewList extends StatelessWidget {
   final List<ParsedItem> items;
-  const PreviewList({super.key, required this.items});
+  final ValueChanged<double>? onAmountChanged;
+  const PreviewList({super.key, required this.items, this.onAmountChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -47,26 +50,55 @@ class PreviewList extends StatelessWidget {
   }
 
   Widget _buildItem(BuildContext context, int index, ParsedItem item) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final currentAmount = settings.getPlayTypeAmount(item.playType);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: AppColors.border.withOpacity(0.3)),
+      ),
       child: Row(
         children: [
-          SizedBox(width: 28, child: Text('$index', style: TextStyle(fontSize: 12, color: AppColors.textLight, fontWeight: FontWeight.w500))),
-          Expanded(child: Text(item.number, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, fontFamily: 'monospace'))),
+          SizedBox(width: 24, child: Text('$index', style: TextStyle(fontSize: 11, color: AppColors.textLight, fontWeight: FontWeight.w500))),
+          Expanded(
+            flex: 3,
+            child: Text(item.number, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'monospace')),
+          ),
           if (item.multiplier != 1.0)
             Container(
               margin: const EdgeInsets.only(right: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
               decoration: BoxDecoration(color: AppColors.warning.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
-              child: Text('×${item.multiplier}', style: TextStyle(fontSize: 11, color: AppColors.warning, fontWeight: FontWeight.w600)),
+              child: Text('×${item.multiplier}', style: TextStyle(fontSize: 10, color: AppColors.warning, fontWeight: FontWeight.w600)),
             ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
               color: item.color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(6),
             ),
-            child: Text(item.playTypeName, style: TextStyle(fontSize: 11, color: item.color, fontWeight: FontWeight.w500)),
+            child: Text(item.playTypeName, style: TextStyle(fontSize: 10, color: item.color, fontWeight: FontWeight.w500)),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            width: 70,
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text('金额', style: TextStyle(fontSize: 9, color: AppColors.textSecondary)),
+                Text('${currentAmount.toStringAsFixed(1)}元', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary)),
+              ],
+            ),
           ),
         ],
       ),

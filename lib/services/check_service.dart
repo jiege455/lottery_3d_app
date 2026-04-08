@@ -36,9 +36,9 @@ class CheckService {
     'g3_dt2': 750.0, 'g3_dt3': 500.0, 'g3_dt4': 370.0, 'g3_dt5': 300.0,
     'g3_dt6': 250.0, 'g3_dt7': 200.0, 'g3_dt8': 185.0, 'g3_dt9': 160.0,
     'baozi_single': 1700.0, 'baozi_all': 850.0,
-    'zq6_3': 1800.0, 'zq6_4': 1800.0, 'zq6_5': 1800.0, 'zq6_6': 180.0,
+    'zq6_3': 1800.0, 'zq6_4': 1800.0, 'zq6_5': 1800.0, 'zq6_6': 1800.0,
     'zq6_7': 1800.0, 'zq6_8': 1800.0, 'zq6_9': 1800.0, 'zq6_all': 1800.0,
-    'zq3_2': 1800.0, 'zq3_3': 1800.0, 'zq3_4': 1800.0, 'zq3_5': 180.0,
+    'zq3_2': 1800.0, 'zq3_3': 1800.0, 'zq3_4': 1800.0, 'zq3_5': 1800.0,
     'zq3_6': 1800.0, 'zq3_7': 1800.0, 'zq3_8': 1800.0, 'zq3_9': 1800.0, 'zq3_all': 1800.0,
     'zbl_g6_1': 300.0, 'zbl_g6_2': 300.0, 'zbl_g6_3': 300.0, 'zbl_g6_4': 300.0,
     'zbl_g6_5': 300.0, 'zbl_g6_6': 300.0, 'zbl_g6_7': 300.0,
@@ -52,8 +52,8 @@ class CheckService {
     'sum_0': 900.0, 'sum_27': 900.0,
     'sum_1': 300.0, 'sum_26': 300.0,
     'sum_2': 150.0, 'sum_25': 150.0,
-    'sum_3': 100.0, 'sum_24': 100.0,
-    'sum_4': 66.6, 'sum_23': 66.6,
+    'sum_3': 90.0, 'sum_24': 90.0,
+    'sum_4': 60.0, 'sum_23': 60.0,
     'sum_5': 42.6, 'sum_22': 42.6,
     'sum_6': 32.0, 'sum_21': 32.0,
     'sum_7': 25.0, 'sum_20': 25.0,
@@ -172,16 +172,28 @@ class CheckService {
         if (isWin) winType = '豹子组选';
         break;
       case var pt when pt.startsWith('zq6_'):
-        final betDigits = bet.number.split('').toSet();
-        final drawDigits = nums.split('').toSet();
-        isWin = betDigits.every((d) => drawDigits.contains(d));
-        if (isWin) winType = '中趣组六';
+        // 组六直选：开奖必须为组六，且开奖号码的所有数字都在投注号码中
+        // 转圈玩法特点：投注的号码会生成所有排列组合
+        // 例如：投注 123，包含 123/132/213/231/312/321 所有顺序
+        if (DrawRecord.getFormType(nums) == '组六') {
+          final betDigits = bet.number.split('').toSet();
+          final drawDigits = nums.split('').toSet();
+          // 只要开奖的 3 个数字都在投注数字中即可（顺序不限）
+          isWin = drawDigits.every((d) => betDigits.contains(d));
+          if (isWin) winType = '组六直选';
+        }
         break;
       case var pt when pt.startsWith('zq3_'):
-        final betDigits = bet.number.split('').toSet();
-        final drawDigits = nums.split('').toSet();
-        isWin = betDigits.every((d) => drawDigits.contains(d));
-        if (isWin) winType = '中趣组三';
+        // 组三直选：开奖必须为组三，且开奖号码的所有数字都在投注号码中
+        // 转圈玩法特点：投注的号码会生成所有组三排列
+        // 例如：投注 12，包含 112/121/211/221/212/122 所有顺序
+        if (DrawRecord.getFormType(nums) == '组三') {
+          final betDigits = bet.number.split('').toSet();
+          final drawDigits = nums.split('').toSet();
+          // 只要开奖的数字都在投注数字中即可（顺序不限）
+          isWin = drawDigits.every((d) => betDigits.contains(d));
+          if (isWin) winType = '组三直选';
+        }
         break;
       case var pt when pt.startsWith('zbl_g6_'):
         if (DrawRecord.getFormType(nums) == '组六') {
@@ -264,15 +276,21 @@ class CheckService {
       final digitSet = bet.number.split('').toSet();
       final numSet = nums.split('').toSet();
       if (bet.playType.startsWith('g3_')) {
-        return _isGroup3(nums) && digitSet.every((d) => numSet.contains(d));
+        if (_isGroup3(nums) && digitSet.every((d) => numSet.contains(d))) {
+          return true;
+        }
       } else {
-        return _isGroup6(nums) && digitSet.every((d) => numSet.contains(d));
+        if (_isGroup6(nums) && digitSet.every((d) => numSet.contains(d))) {
+          return true;
+        }
       }
     }
     if (bet.playType.startsWith('fs_')) {
-      final digitSet = bet.number.split('').toSet();
+      final betDigits = bet.number.split('').toSet();
       final numSet = nums.split('').toSet();
-      return digitSet.every((d) => numSet.contains(d));
+      if (numSet.length == 3 && betDigits.containsAll(numSet)) return true;
+      if (numSet.length == 2 && betDigits.containsAll(numSet)) return true;
+      return false;
     }
     return false;
   }
