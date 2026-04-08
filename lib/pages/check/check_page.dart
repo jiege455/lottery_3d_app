@@ -5,7 +5,10 @@ import '../../../core/theme/app_theme.dart';
 import '../../../models/bet_record.dart';
 import '../../../models/draw_record.dart';
 import '../../../providers/bet_provider.dart';
+import '../../../providers/settings_provider.dart';
 import '../../../services/check_service.dart';
+import '../../../services/lottery_api_service.dart';
+import '../../../services/db_service.dart';
 import '../../../widgets/toast.dart';
 
 class CheckPage extends StatefulWidget {
@@ -21,6 +24,8 @@ class _CheckPageState extends State<CheckPage> {
   List<CheckResult> _results = [];
   bool _checking = false;
   bool _betsLoaded = false;
+  bool _syncing = false;
+  List<DrawRecord> _recentDraws = [];
 
   @override
   void initState() {
@@ -28,20 +33,54 @@ class _CheckPageState extends State<CheckPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && !_betsLoaded) {
         _betsLoaded = true;
-        try {
-          Provider.of<BetProvider>(context, listen: false).loadBets();
-        } catch (e) {
-          print('CheckPage.loadBets error: $e');
-        }
+        _initData();
       }
     });
   }
 
-  @override
-  void dispose() {
-    _issueController.dispose();
-    _numberController.dispose();
-    super.dispose();
+  Future<void> _initData() async {
+    try {
+      Provider.of<BetProvider>(context, listen: false).loadBets();
+    } catch (e) {
+      print('CheckPage._initData error: $e');
+    }
+    _loadRecentDraws();
+  }
+
+  Future<void> _loadRecentDraws() async {
+    try {
+      final lotteryType = Provider.of<SettingsProvider>(context, listen: false).defaultLotteryType;
+      final draws = await DatabaseHelper.instance.getAllDraws(lotteryType: lotteryType, limit: 5);
+      if (mounted) setState(() => _recentDraws = draws);
+    } catch (e) {
+      print('CheckPage._loadRecentDraws error: $e');
+    }
+  }
+
+  Future<void> _syncFromApi() async {
+    if (_syncing) return;
+    setState(() => _syncing = true);
+    try {
+      final lotteryType = Provider.of<SettingsProvider>(context, listen: false).defaultLotteryType;
+      final count = await LotteryApiService.syncDraws(lotteryType: lotteryType, count: 20);
+      await _loadRecentDraws();
+      if (mounted) {
+        if (count > 0) {
+          ToastUtil.success(context, '同步成功，新增 $count 条开奖数据');
+        } else {
+          ToastUtil.success(context, '已同步，暂无新数据');
+        }
+      }
+    } catch (e) {
+      if (mounted) ToastUtil.error(context, '同步失败：$e');
+    } finally {
+      if (mounted) setState(() => _syncing = false);
+    }
+  }
+
+  void _selectDraw(DrawRecord draw) {
+    _issueController.text = draw.issue;
+    _numberController.text = draw.numbers;
   }
 
   void _startCheck() {
@@ -81,11 +120,20 @@ class _CheckPageState extends State<CheckPage> {
   }
 
   @override
+  void dispose() {
+    _issueController.dispose();
+    _numberController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SafeArea(child: SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 100),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Padding(padding: const EdgeInsets.fromLTRB(20, 16, 20, 12), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('中奖校验', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)), Text('开发者：杰哥网络科技', style: TextStyle(fontSize: 10, color: AppColors.textLight))])),
+        _buildSyncCard(),
+        const SizedBox(height: 8),
         _buildInputCard(),
         if (_checking) const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator())),
         if (!_checking && _results.isNotEmpty) ...[
@@ -94,13 +142,56 @@ class _CheckPageState extends State<CheckPage> {
           ..._buildResultList(),
         ],
         if (!_checking && _results.isEmpty)
-          Padding(padding: const EdgeInsets.all(32), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Padding(padding: const EdgeInsets.symmetric(vertical: 48), child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             Icon(Icons.verified_outlined, size: 64, color: AppColors.textLight),
             const SizedBox(height: 12),
             Text('输入开奖号码开始校验', style: TextStyle(fontSize: 15, color: AppColors.textSecondary)),
-          ])),
+          ]))),
       ]),
     ));
+  }
+
+  Widget _buildSyncCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(AppStyles.radiusSm), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4)]),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Row(children: [
+            Icon(Icons.cloud_download, size: 18, color: AppColors.primary),
+            const SizedBox(width: 6),
+            const Text('开奖数据同步', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+          ]),
+          ElevatedButton.icon(
+            onPressed: _syncing ? null : _syncFromApi,
+            icon: _syncing ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.sync, size: 16),
+            label: Text(_syncing ? '同步中...' : '同步开奖', style: const TextStyle(fontSize: 12)),
+            style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6)),
+          ),
+        ]),
+        if (_recentDraws.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Text('最近开奖（点击自动填入）', style: TextStyle(fontSize: 11, color: AppColors.textLight)),
+          const SizedBox(height: 6),
+          Wrap(spacing: 6, runSpacing: 6, children: _recentDraws.map((d) => GestureDetector(
+            onTap: () => _selectDraw(d),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(6), border: Border.all(color: AppColors.primary.withOpacity(0.2))),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Text(d.issue, style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                const SizedBox(width: 4),
+                Text(d.numbers, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primary, fontFamily: 'monospace')),
+              ]),
+            ),
+          )).toList()),
+        ] else ...[
+          const SizedBox(height: 6),
+          Text('暂无开奖数据，点击同步获取', style: TextStyle(fontSize: 11, color: AppColors.textLight)),
+        ],
+      ]),
+    );
   }
 
   Widget _buildInputCard() {
