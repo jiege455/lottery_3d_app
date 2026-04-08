@@ -21,28 +21,29 @@ class ExportPanel extends StatelessWidget {
 
   String _generateCSV(List<BetRecord> bets) {
     final buf = StringBuffer();
-    buf.writeln('\uFEFF序号,彩种,玩法,号码,倍数,金额(元),录入时间');
+    buf.writeln('\uFEFF 序号，彩种，玩法，号码，倍数，单价 (元),金额 (元),录入时间');
     for (var i = 0; i < bets.length; i++) {
       final b = bets[i];
       final amount = (b.multiplier * b.baseAmount).toStringAsFixed(1);
-      buf.writeln('${i + 1},${_escapeCsvField(b.lotteryType == 1 ? "福彩3D" : "排列三")},${_escapeCsvField(b.playTypeName)},${_escapeCsvField(b.number)},${b.multiplier},$amount,${DateFormat('yyyy-MM-dd HH:mm:ss').format(b.createTime)}');
+      buf.writeln('${i + 1},${_escapeCsvField(b.lotteryType == 1 ? "福彩 3D" : "排列三")},${_escapeCsvField(b.playTypeName)},${_escapeCsvField(b.number)},${b.multiplier},${b.baseAmount.toStringAsFixed(1)},$amount,${DateFormat('yyyy-MM-dd HH:mm:ss').format(b.createTime)}');
     }
     final totalAmount = bets.fold<double>(0, (sum, b) => sum + b.multiplier * b.baseAmount);
-    buf.writeln(',,,,合计:,${totalAmount.toStringAsFixed(1)}元,');
+    buf.writeln(',,,,,合计:,${totalAmount.toStringAsFixed(1)}元,');
     return buf.toString();
   }
 
   String _generateTXT(List<BetRecord> bets) {
     final totalAmount = bets.fold<double>(0, (sum, b) => sum + b.multiplier * b.baseAmount);
-    final lines = <String>['=' * 55, '福彩3D/排列三 投注记录导出', '=' * 55, '', '开发者：杰哥网络科技 · QQ 2711793818', '', '导出时间：${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}', '', '总记录数：${bets.length}', '总金额：${totalAmount.toStringAsFixed(1)}元', '', '-' * 55];
+    final lines = <String>['=' * 70, '福彩 3D/排列三 投注记录导出', '=' * 70, '', '开发者：杰哥网络科技 · QQ 2711793818', '', '导出时间：${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}', '', '总记录数：${bets.length}', '总金额：${totalAmount.toStringAsFixed(1)}元', '', '-' * 70];
     for (var i = 0; i < bets.length; i++) {
       final b = bets[i];
-      final lotteryName = b.lotteryType == 1 ? '福彩3D' : '排列三';
+      final lotteryName = b.lotteryType == 1 ? '福彩 3D' : '排列三';
       final amount = (b.multiplier * b.baseAmount).toStringAsFixed(1);
-      lines.add('${(i + 1).toString().padRight(4)} | ${lotteryName.padRight(6)} | ${b.playTypeName.padRight(8)} | ${b.number.padLeft(6)} | ${b.multiplier.toString().padLeft(4)}x | ${amount.padLeft(6)}元 | ${DateFormat('MM-dd HH:mm').format(b.createTime)}');
+      final numStr = b.number.length > 10 ? b.number.substring(0, 8) + '..' : b.number;
+      lines.add('${(i + 1).toString().padLeft(3)} | ${lotteryName.padRight(6)} | ${b.playTypeName.padRight(10)} | ${numStr.padRight(10)} | ${b.multiplier.toString().padLeft(4)}x | ${b.baseAmount.toStringAsFixed(1).padLeft(5)}元 | ${amount.padLeft(7)}元 | ${DateFormat('MM-dd HH:mm').format(b.createTime)}');
     }
-    lines.add('-' * 55);
-    lines.add('合计：${bets.length}条  ${totalAmount.toStringAsFixed(1)}元');
+    lines.add('-' * 70);
+    lines.add('合计：${bets.length}条记录  总金额：${totalAmount.toStringAsFixed(1)}元');
     return lines.join('\n');
   }
 
@@ -52,8 +53,8 @@ class ExportPanel extends StatelessWidget {
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         const Text('数据导出', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
-        ListTile(leading: Icon(Icons.table_chart, color: AppColors.primary), title: const Text('导出CSV文件'), subtitle: const Text('Excel兼容格式，含金额列'), onTap: () { Navigator.pop(ctx); final csv = _generateCSV(bets); Share.shareXFiles([XFile.fromData(utf8.encode(csv), name: '投注记录_${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv')]); }),
-        ListTile(leading: Icon(Icons.description, color: AppColors.cyan), title: const Text('导出TXT文本'), subtitle: const Text('纯文本格式，含金额合计'), onTap: () { Navigator.pop(ctx); final txt = _generateTXT(bets); Share.shareXFiles([XFile.fromData(utf8.encode(txt), name: '投注记录_${DateFormat('yyyy-MM-dd').format(DateTime.now())}.txt')]); }),
+        ListTile(leading: Icon(Icons.table_chart, color: AppColors.primary), title: const Text('导出 CSV 文件'), subtitle: const Text('Excel 兼容格式，含单价和金额'), onTap: () { Navigator.pop(ctx); final csv = _generateCSV(bets); Share.shareXFiles([XFile.fromData(utf8.encode(csv), name: '投注记录_${DateFormat('yyyy-MM-dd').format(DateTime.now())}.csv')]); }),
+        ListTile(leading: Icon(Icons.description, color: AppColors.cyan), title: const Text('导出 TXT 文本'), subtitle: const Text('纯文本格式，清晰对齐'), onTap: () { Navigator.pop(ctx); final txt = _generateTXT(bets); Share.shareXFiles([XFile.fromData(utf8.encode(txt), name: '投注记录_${DateFormat('yyyy-MM-dd').format(DateTime.now())}.txt')]); }),
         ListTile(leading: Icon(Icons.copy, color: AppColors.purple), title: const Text('复制到剪贴板'), subtitle: const Text('复制格式化文本'), onTap: () async { Navigator.pop(ctx); final txt = _generateTXT(bets); await Share.share(txt); }),
       ]),
     ));

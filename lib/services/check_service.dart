@@ -19,29 +19,50 @@ class CheckResult {
 
 class CheckService {
   static const Map<String, double> oddsMap = {
-    'single': 1000.0,
-    'group3': 333.33,
-    'group6': 166.67,
+    'single': 925.0,
+    'group3': 305.0,
+    'group6': 152.5,
     'dan': 10.0,
     'pos1': 10.0,
     'pos2': 100.0,
     'shuangfei_g3': 333.33,
     'shuangfei_g6': 166.67,
-    'g3_2': 166.67, 'g3_3': 55.56, 'g3_4': 27.78, 'g3_5': 16.67,
-    'g3_6': 11.11, 'g3_7': 7.94, 'g3_8': 5.95, 'g3_9': 4.76, 'g3_all': 3.70,
-    'g6_4': 41.67, 'g6_5': 16.67, 'g6_6': 8.33, 'g6_7': 4.76,
-    'g6_8': 2.97, 'g6_9': 2.08, 'g6_all': 1.39,
+    'g3_2': 150.0, 'g3_3': 50.0, 'g3_4': 25.0, 'g3_5': 15.0,
+    'g3_6': 10.0, 'g3_7': 7.2, 'g3_8': 5.4, 'g3_9': 4.2, 'g3_all': 3.3,
+    'g6_4': 37.0, 'g6_5': 15.0, 'g6_6': 7.8, 'g6_7': 4.4,
+    'g6_8': 2.7, 'g6_9': 1.9, 'g6_all': 1.25,
     'g6_dt2': 1500.0, 'g6_dt3': 500.0, 'g6_dt4': 250.0, 'g6_dt5': 150.0,
     'g6_dt6': 100.0, 'g6_dt7': 70.0, 'g6_dt8': 50.0, 'g6_dt9': 40.0,
     'g3_dt2': 750.0, 'g3_dt3': 500.0, 'g3_dt4': 370.0, 'g3_dt5': 300.0,
     'g3_dt6': 250.0, 'g3_dt7': 200.0, 'g3_dt8': 185.0, 'g3_dt9': 160.0,
     'baozi_single': 1700.0, 'baozi_all': 850.0,
+    'zq6_3': 1800.0, 'zq6_4': 1800.0, 'zq6_5': 1800.0, 'zq6_6': 180.0,
+    'zq6_7': 1800.0, 'zq6_8': 1800.0, 'zq6_9': 1800.0, 'zq6_all': 1800.0,
+    'zq3_2': 1800.0, 'zq3_3': 1800.0, 'zq3_4': 1800.0, 'zq3_5': 180.0,
+    'zq3_6': 1800.0, 'zq3_7': 1800.0, 'zq3_8': 1800.0, 'zq3_9': 1800.0, 'zq3_all': 1800.0,
+    'zbl_g6_1': 300.0, 'zbl_g6_2': 300.0, 'zbl_g6_3': 300.0, 'zbl_g6_4': 300.0,
+    'zbl_g6_5': 300.0, 'zbl_g6_6': 300.0, 'zbl_g6_7': 300.0,
+    'zbl_g3_1': 600.0, 'zbl_g3_2': 600.0, 'zbl_g3_3': 600.0, 'zbl_g3_4': 600.0,
+    'zbl_g3_5': 600.0, 'zbl_g3_6': 600.0, 'zbl_g3_7': 600.0,
     'fs_3': 333.33, 'fs_4': 125.0, 'fs_5': 50.0, 'fs_6': 22.22,
     'fs_7': 10.71, 'fs_8': 5.49, 'fs_9': 2.96, 'fs_all': 1.0,
-    'span0': 1000.0, 'span1': 200.0, 'span2': 66.67, 'span3': 33.33,
-    'span4': 20.0, 'span5': 13.33, 'span6': 9.52, 'span7': 7.14,
-    'span8': 5.56, 'span9': 4.44,
-    'sum_val': 10.0,
+    'span0': 80.0, 'span1': 16.5, 'span2': 9.2, 'span3': 7.0,
+    'span4': 6.2, 'span5': 6.0, 'span6': 6.2, 'span7': 7.0,
+    'span8': 9.2, 'span9': 16.5,
+    'sum_0': 900.0, 'sum_27': 900.0,
+    'sum_1': 300.0, 'sum_26': 300.0,
+    'sum_2': 150.0, 'sum_25': 150.0,
+    'sum_3': 100.0, 'sum_24': 100.0,
+    'sum_4': 66.6, 'sum_23': 66.6,
+    'sum_5': 42.6, 'sum_22': 42.6,
+    'sum_6': 32.0, 'sum_21': 32.0,
+    'sum_7': 25.0, 'sum_20': 25.0,
+    'sum_8': 20.0, 'sum_19': 20.0,
+    'sum_9': 16.2, 'sum_18': 16.2,
+    'sum_10': 14.2, 'sum_17': 14.2,
+    'sum_11': 13.0, 'sum_16': 13.0,
+    'sum_12': 12.2, 'sum_15': 12.2,
+    'sum_13': 12.0, 'sum_14': 12.0,
     'bigsmall': 2.0,
     'oddeven': 2.0,
   };
@@ -132,12 +153,36 @@ class CheckService {
       case 'baozi_all':
         isWin = nums[0] == nums[1] && nums[1] == nums[2];
         break;
+      case var pt when pt.startsWith('zq6_'):
+        final betDigits = bet.number.split('').toSet();
+        final drawDigits = nums.split('').toSet();
+        isWin = betDigits.every((d) => drawDigits.contains(d));
+        break;
+      case var pt when pt.startsWith('zq3_'):
+        final betDigits = bet.number.split('').toSet();
+        final drawDigits = nums.split('').toSet();
+        isWin = betDigits.every((d) => drawDigits.contains(d));
+        break;
+      case var pt when pt.startsWith('zbl_g6_'):
+        if (DrawRecord.getFormType(nums) == '组六') {
+          final betDigits = bet.number.split('').toSet();
+          final drawDigits = nums.split('').toSet();
+          isWin = betDigits.every((d) => drawDigits.contains(d));
+        }
+        break;
+      case var pt when pt.startsWith('zbl_g3_'):
+        if (DrawRecord.getFormType(nums) == '组三') {
+          final betDigits = bet.number.split('').toSet();
+          final drawDigits = nums.split('').toSet();
+          isWin = betDigits.every((d) => drawDigits.contains(d));
+        }
+        break;
       case var pt when pt.startsWith('span'):
         final spanVal = int.tryParse(pt.replaceAll('span', '')) ?? 0;
         isWin = DrawRecord.getSpan(nums) == spanVal;
         break;
-      case 'sum_val':
-        final sumVal = int.tryParse(bet.number) ?? 0;
+      case var pt when pt.startsWith('sum_'):
+        final sumVal = int.tryParse(pt.replaceAll('sum_', '')) ?? 0;
         isWin = DrawRecord.getSumValue(nums) == sumVal;
         break;
       case 'bigsmall':

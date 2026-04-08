@@ -10,7 +10,6 @@ class SettingsProvider with ChangeNotifier {
   Map<String, double> _playTypeAmounts = {};
   Map<String, double> _defaultAmounts = {};
   Map<String, double> _playTypeWinAmounts = {};
-  List<Map<String, dynamic>> _customPlayTypes = [];
 
   AppSettings get settings => _settings;
   double get defaultMultiplier => _settings.defaultMultiplier;
@@ -18,7 +17,6 @@ class SettingsProvider with ChangeNotifier {
   bool get isLoaded => _isLoaded;
   Map<String, double> get playTypeAmounts => _playTypeAmounts;
   Map<String, double> get playTypeWinAmounts => _playTypeWinAmounts;
-  List<Map<String, dynamic>> get customPlayTypes => _customPlayTypes;
 
   SettingsProvider() {
     _initDefaultAmounts();
@@ -43,7 +41,6 @@ class SettingsProvider with ChangeNotifier {
       _settings = await _db.getSettings();
       _playTypeAmounts = await _db.getPlayTypeAmounts();
       _playTypeWinAmounts = await _db.getPlayTypeWinAmounts();
-      _customPlayTypes = await _db.getCustomPlayTypes();
       _isLoaded = true;
       notifyListeners();
     } catch (e) {
@@ -106,32 +103,6 @@ class SettingsProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       print('SettingsProvider.resetPlayTypeAmounts error: $e');
-      notifyListeners();
-    }
-  }
-
-  Future<void> addCustomPlayType(String code, String name, String category, double amount, double winAmount, String color) async {
-    try {
-      await _db.addCustomPlayType(code, name, category, amount, winAmount, color);
-      _customPlayTypes = await _db.getCustomPlayTypes();
-      _playTypeAmounts[code] = amount;
-      _playTypeWinAmounts[code] = winAmount;
-      notifyListeners();
-    } catch (e) {
-      print('SettingsProvider.addCustomPlayType error: $e');
-      notifyListeners();
-    }
-  }
-
-  Future<void> deleteCustomPlayType(String code) async {
-    try {
-      await _db.deleteCustomPlayType(code);
-      _customPlayTypes = await _db.getCustomPlayTypes();
-      _playTypeAmounts.remove(code);
-      _playTypeWinAmounts.remove(code);
-      notifyListeners();
-    } catch (e) {
-      print('SettingsProvider.deleteCustomPlayType error: $e');
       notifyListeners();
     }
   }

@@ -34,7 +34,7 @@ class DatabaseHelper {
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
-    return await openDatabase(path, version: 1, onCreate: _onCreate, onUpgrade: _onUpgrade);
+    return await openDatabase(path, version: 2, onCreate: _onCreate, onUpgrade: _onUpgrade);
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -78,23 +78,19 @@ class DatabaseHelper {
         win_amount REAL DEFAULT 0.0
       )
     ''');
-    await db.execute('''
-      CREATE TABLE custom_play_types (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        code TEXT NOT NULL UNIQUE,
-        name TEXT NOT NULL,
-        category TEXT NOT NULL,
-        amount REAL DEFAULT 2.0,
-        win_amount REAL DEFAULT 0.0,
-        color TEXT DEFAULT '#4F46E5',
-        is_enabled INTEGER DEFAULT 1,
-        created_time TEXT NOT NULL
-      )
-    ''');
     await db.insert('settings', {'id': 1, 'default_multiplier': 1.0, 'default_lottery_type': 1, 'last_backup_time': ''}, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {}
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      try {
+        await db.execute('DROP TABLE IF EXISTS custom_play_types');
+        print('Database upgraded to version 2: Removed custom_play_types table');
+      } catch (e) {
+        print('Database upgrade error: $e');
+      }
+    }
+  }
 
   Future<int> insertBet(BetRecord record) async {
     try {
@@ -349,49 +345,6 @@ class DatabaseHelper {
       await db.delete('play_type_amounts');
     } catch (e) {
       print('resetPlayTypeAmounts error: $e');
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> getCustomPlayTypes() async {
-    try {
-      final db = await database;
-      return await db.query('custom_play_types', orderBy: 'created_time DESC');
-    } catch (e) {
-      print('getCustomPlayTypes error: $e');
-      return [];
-    }
-  }
-
-  Future<void> addCustomPlayType(String code, String name, String category, double amount, double winAmount, String color) async {
-    try {
-      final db = await database;
-      await db.insert('custom_play_types', {
-        'code': code,
-        'name': name,
-        'category': category,
-        'amount': amount,
-        'win_amount': winAmount,
-        'color': color,
-        'is_enabled': 1,
-        'created_time': DateTime.now().toIso8601String(),
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
-      await db.insert('play_type_amounts', {
-        'play_type': code,
-        'amount': amount,
-        'win_amount': winAmount,
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
-    } catch (e) {
-      print('addCustomPlayType error: $e');
-    }
-  }
-
-  Future<void> deleteCustomPlayType(String code) async {
-    try {
-      final db = await database;
-      await db.delete('custom_play_types', where: 'code = ?', whereArgs: [code]);
-      await db.delete('play_type_amounts', where: 'play_type = ?', whereArgs: [code]);
-    } catch (e) {
-      print('deleteCustomPlayType error: $e');
     }
   }
 

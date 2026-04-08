@@ -15,12 +15,6 @@ class PlayTypeAmountSettingsPage extends StatefulWidget {
 class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage> {
   final Map<String, TextEditingController> _amountControllers = {};
   final Map<String, TextEditingController> _winAmountControllers = {};
-  final TextEditingController _customCodeController = TextEditingController();
-  final TextEditingController _customNameController = TextEditingController();
-  final TextEditingController _customCategoryController = TextEditingController();
-  final TextEditingController _customAmountController = TextEditingController();
-  final TextEditingController _customWinAmountController = TextEditingController();
-  final TextEditingController _customColorController = TextEditingController(text: '#4F46E5');
 
   @override
   void initState() {
@@ -46,47 +40,7 @@ class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage>
   void dispose() {
     for (final controller in _amountControllers.values) controller.dispose();
     for (final controller in _winAmountControllers.values) controller.dispose();
-    for (final controller in [_customCodeController, _customNameController, _customCategoryController, _customAmountController, _customWinAmountController, _customColorController]) controller.dispose();
     super.dispose();
-  }
-
-  void _showAddCustomPlayTypeDialog() {
-    showDialog(context: context, builder: (ctx) => AlertDialog(
-      title: const Text('添加自定义玩法'),
-      content: SingleChildScrollView(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: _customCodeController, decoration: InputDecoration(labelText: '玩法代码', hintText: '如：custom1', helperText: '英文或数字，不能与现有玩法重复')),
-          TextField(controller: _customNameController, decoration: const InputDecoration(labelText: '玩法名称', hintText: '如：自定义玩法')),
-          TextField(controller: _customCategoryController, decoration: const InputDecoration(labelText: '所属分类', hintText: '如：自定义')),
-          TextField(controller: _customAmountController, decoration: const InputDecoration(labelText: '投注金额', hintText: '2.0'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
-          TextField(controller: _customWinAmountController, decoration: const InputDecoration(labelText: '中奖金额', hintText: '0 表示使用默认'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
-          TextField(controller: _customColorController, decoration: const InputDecoration(labelText: '颜色代码', hintText: '#4F46E5')),
-        ]),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
-        ElevatedButton(
-          onPressed: () {
-            if (_customCodeController.text.isEmpty || _customNameController.text.isEmpty) {
-              ToastUtil.warning(context, '请填写必填项');
-              return;
-            }
-            final amount = double.tryParse(_customAmountController.text) ?? 2.0;
-            final winAmount = double.tryParse(_customWinAmountController.text) ?? 0.0;
-            Provider.of<SettingsProvider>(context, listen: false).addCustomPlayType(
-              _customCodeController.text, _customNameController.text, _customCategoryController.text, amount, winAmount, _customColorController.text);
-            Navigator.pop(ctx);
-            ToastUtil.success(context, '添加成功');
-            _customCodeController.clear();
-            _customNameController.clear();
-            _customCategoryController.clear();
-            _customAmountController.clear();
-            _customWinAmountController.clear();
-          },
-          child: const Text('添加'),
-        ),
-      ],
-    ));
   }
 
   Future<void> _saveAmount(String playType) async {
@@ -115,25 +69,6 @@ class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage>
     ));
   }
 
-  void _confirmDeleteCustom(String code, SettingsProvider settings) {
-    showDialog(context: context, builder: (ctx) => AlertDialog(
-      title: const Text('确认删除'),
-      content: const Text('确定要删除这个自定义玩法吗？'),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
-          onPressed: () {
-            Navigator.pop(ctx);
-            settings.deleteCustomPlayType(code);
-            ToastUtil.success(context, '已删除');
-          },
-          child: const Text('删除', style: TextStyle(color: Colors.white)),
-        ),
-      ],
-    ));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -143,8 +78,6 @@ class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage>
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         actions: [
-          TextButton.icon(onPressed: _showAddCustomPlayTypeDialog, icon: const Icon(Icons.add, size: 18), label: const Text('添加玩法')),
-          const SizedBox(width: 8),
           TextButton.icon(onPressed: _resetAll, icon: const Icon(Icons.restore, size: 18), label: const Text('恢复默认')),
         ],
       ),
@@ -158,10 +91,6 @@ class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage>
                 if (playTypesInCategory.isEmpty) return const SizedBox.shrink();
                 return _buildCategorySection(category, playTypesInCategory, settings);
               }),
-              if (settings.customPlayTypes.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                _buildCustomPlayTypesSection(settings),
-              ],
             ],
           );
         },
@@ -186,43 +115,15 @@ class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage>
         child: Column(children: playTypes.asMap().entries.map((entry) {
           final pt = entry.value;
           final isLast = entry.key == playTypes.length - 1;
-          final currentAmount = settings.getPlayTypeAmount(pt.code);
           final defaultAmount = pt.baseAmount;
-          final isCustom = settings.playTypeAmounts.containsKey(pt.code);
-          return _buildPlayTypeItem(pt.code, pt.name, defaultAmount, currentAmount, isCustom, settings, isLast);
+          return _buildPlayTypeItem(pt.code, pt.name, defaultAmount, settings, isLast);
         }).toList()),
       ),
       const SizedBox(height: 8),
     ]);
   }
 
-  Widget _buildCustomPlayTypesSection(SettingsProvider settings) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: AppColors.success.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-            child: Text('自定义玩法 (${settings.customPlayTypes.length})', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.success)),
-          ),
-        ]),
-      ),
-      Card(
-        margin: EdgeInsets.zero,
-        child: Column(children: settings.customPlayTypes.asMap().entries.map((entry) {
-          final custom = entry.value;
-          final isLast = entry.key == settings.customPlayTypes.length - 1;
-          final code = custom['code'] as String;
-          final name = custom['name'] as String;
-          final amount = (custom['amount'] as num?)?.toDouble() ?? 2.0;
-          return _buildPlayTypeItem(code, name, amount, settings.getPlayTypeAmount(code), settings.playTypeAmounts.containsKey(code), settings, isLast, isCustom: true, customData: custom);
-        }).toList()),
-      ),
-    ]);
-  }
-
-  Widget _buildPlayTypeItem(String code, String name, double defaultAmount, double currentAmount, bool isCustomAmount, SettingsProvider settings, bool isLast, {bool isCustom = false, Map<String, dynamic>? customData}) {
+  Widget _buildPlayTypeItem(String code, String name, double defaultAmount, SettingsProvider settings, bool isLast) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(border: isLast ? null : Border(bottom: BorderSide(color: AppColors.border.withOpacity(0.3)))),
@@ -230,20 +131,10 @@ class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage>
         Expanded(
           flex: 2,
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
-              if (isCustom) ...[
-                const SizedBox(width: 6),
-                Container(padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1), decoration: BoxDecoration(color: AppColors.success.withOpacity(0.2), borderRadius: BorderRadius.circular(4)), child: Text('自定义', style: TextStyle(fontSize: 9, color: AppColors.success))),
-              ],
-            ]),
+            Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
             Text('默认：${defaultAmount.toStringAsFixed(1)}元/注', style: TextStyle(fontSize: 11, color: AppColors.textLight)),
           ]),
         ),
-        if (isCustom && customData != null) ...[
-          IconButton(icon: Icon(Icons.delete_outline, color: AppColors.danger, size: 18), onPressed: () => _confirmDeleteCustom(code, settings), padding: EdgeInsets.zero, constraints: const BoxConstraints(minWidth: 32, minHeight: 32)),
-          const SizedBox(width: 4),
-        ],
         Column(children: [
           SizedBox(
             width: 70,
