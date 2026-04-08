@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/play_types.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../providers/settings_provider.dart';
+import '../../../services/check_service.dart';
 import '../../../widgets/toast.dart';
 
 class PlayTypeAmountSettingsPage extends StatefulWidget {
@@ -30,7 +31,12 @@ class _PlayTypeAmountSettingsPageState extends State<PlayTypeAmountSettingsPage>
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     for (final pt in PlayTypes.all) {
       final amount = settings.getPlayTypeAmount(pt.code);
-      final winAmount = settings.getPlayTypeWinAmount(pt.code);
+      var winAmount = settings.getPlayTypeWinAmount(pt.code);
+      // 如果中奖金额未设置，使用默认赔率计算
+      if (winAmount <= 0) {
+        final defaultOdds = CheckService.oddsMap[pt.code] ?? 0.0;
+        winAmount = amount * defaultOdds;
+      }
       _amountControllers[pt.code]!.text = amount.toStringAsFixed(1);
       _winAmountControllers[pt.code]!.text = winAmount.toStringAsFixed(1);
     }
