@@ -9,7 +9,6 @@ import '../../providers/settings_provider.dart';
 import 'widgets/play_type_chips.dart';
 import 'widgets/rule_hint_box.dart';
 import 'widgets/batch_input.dart';
-import 'widgets/odds_selector.dart';
 import 'widgets/preview_list.dart';
 import 'widgets/bet_history_list.dart';
 import '../../widgets/toast.dart';
@@ -149,13 +148,11 @@ class _EntryPageState extends State<EntryPage> {
             ),
             _buildLotterySwitcher(),
             const SizedBox(height: 4),
-            _buildMultiplierSection(),
-            const SizedBox(height: 4),
             PlayTypeChips(selectedPlayType: _selectedPlayType, onChanged: (code) { setState(() => _selectedPlayType = code); _applyCustomAmounts(); }),
             RuleHintBox(playTypeCode: _selectedPlayType),
             BatchInput(controller: _inputController, onChanged: _onInputChanged),
-            const SizedBox(height: 12),
-            OddsSelector(selectedPlayType: _selectedPlayType, onChanged: (code) { setState(() => _selectedPlayType = code); _applyCustomAmounts(); }),
+            const SizedBox(height: 4),
+            _buildMultiplierSection(),
             const SizedBox(height: 12),
             PreviewList(items: _parsedItems),
             if (_parsedItems.isNotEmpty) ...[

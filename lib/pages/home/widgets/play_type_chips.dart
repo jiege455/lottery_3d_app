@@ -28,10 +28,6 @@ class _PlayTypeChipsState extends State<PlayTypeChips> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('选择玩法', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              Text(
-                _expandedCategories.length == PlayTypes.categories.length ? '全部收起' : '全部展开',
-                style: TextStyle(fontSize: 12, color: AppColors.primary),
-              ),
               GestureDetector(
                 onTap: () {
                   setState(() {
@@ -43,10 +39,20 @@ class _PlayTypeChipsState extends State<PlayTypeChips> {
                     }
                   });
                 },
-                child: Icon(
-                  _expandedCategories.length == PlayTypes.categories.length ? Icons.expand_less : Icons.expand_more,
-                  size: 20,
-                  color: AppColors.primary,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _expandedCategories.length == PlayTypes.categories.length ? '全部收起' : '全部展开',
+                      style: TextStyle(fontSize: 12, color: AppColors.primary),
+                    ),
+                    const SizedBox(width: 2),
+                    Icon(
+                      _expandedCategories.length == PlayTypes.categories.length ? Icons.expand_less : Icons.expand_more,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                  ],
                 ),
               ),
             ],
