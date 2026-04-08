@@ -41,8 +41,8 @@ class CheckService {
     'oddeven': 2.0,
   };
 
-  static List<CheckResult> checkAll(List<BetRecord> bets, DrawRecord draw, [double customWinAmount = 0.0]) {
-    return bets.map((bet) => checkSingle(bet, draw, customWinAmount)).toList();
+  static List<CheckResult> checkAll(List<BetRecord> bets, DrawRecord draw, [Map<String, double>? customWinAmounts]) {
+    return bets.map((bet) => checkSingle(bet, draw, customWinAmounts?[bet.playType] ?? 0.0)).toList();
   }
 
   static CheckResult checkSingle(BetRecord bet, DrawRecord draw, [double customWinAmount = 0.0]) {
