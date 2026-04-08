@@ -1,20 +1,39 @@
 import 'package:flutter/material.dart';
 import '../models/app_settings.dart';
 import '../services/db_service.dart';
+import '../core/constants/play_types.dart';
 
 class SettingsProvider with ChangeNotifier {
   final DatabaseHelper _db = DatabaseHelper.instance;
   AppSettings _settings = AppSettings();
   bool _isLoaded = false;
+  Map<String, double> _playTypeAmounts = {};
+  Map<String, double> _defaultAmounts = {};
 
   AppSettings get settings => _settings;
   double get defaultMultiplier => _settings.defaultMultiplier;
   int get defaultLotteryType => _settings.defaultLotteryType;
   bool get isLoaded => _isLoaded;
+  Map<String, double> get playTypeAmounts => _playTypeAmounts;
+
+  SettingsProvider() {
+    _initDefaultAmounts();
+  }
+
+  void _initDefaultAmounts() {
+    _defaultAmounts = {
+      for (final pt in PlayTypes.all) pt.code: pt.baseAmount,
+    };
+  }
+
+  double getPlayTypeAmount(String playType) {
+    return _playTypeAmounts[playType] ?? _defaultAmounts[playType] ?? 2.0;
+  }
 
   Future<void> loadSettings() async {
     try {
       _settings = await _db.getSettings();
+      _playTypeAmounts = await _db.getPlayTypeAmounts();
       _isLoaded = true;
       notifyListeners();
     } catch (e) {
@@ -53,6 +72,28 @@ class SettingsProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       print('SettingsProvider.updateBackupTime error: $e');
+      notifyListeners();
+    }
+  }
+
+  Future<void> updatePlayTypeAmount(String playType, double amount) async {
+    try {
+      await _db.setPlayTypeAmount(playType, amount);
+      _playTypeAmounts[playType] = amount;
+      notifyListeners();
+    } catch (e) {
+      print('SettingsProvider.updatePlayTypeAmount error: $e');
+      notifyListeners();
+    }
+  }
+
+  Future<void> resetPlayTypeAmounts() async {
+    try {
+      await _db.resetPlayTypeAmounts();
+      _playTypeAmounts.clear();
+      notifyListeners();
+    } catch (e) {
+      print('SettingsProvider.resetPlayTypeAmounts error: $e');
       notifyListeners();
     }
   }

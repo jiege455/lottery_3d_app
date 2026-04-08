@@ -6,31 +6,39 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../models/bet_record.dart';
 import '../../../../providers/bet_provider.dart';
+import '../../../../providers/settings_provider.dart';
 import '../../../../widgets/toast.dart';
 
 class ExportPanel extends StatelessWidget {
   const ExportPanel({super.key});
+
+  String _escapeCsvField(String field) {
+    if (field.contains(',') || field.contains('"') || field.contains('\n')) {
+      return '"${field.replaceAll('"', '""')}"';
+    }
+    return field;
+  }
 
   String _generateCSV(List<BetRecord> bets) {
     final buf = StringBuffer();
     buf.writeln('\uFEFF序号,彩种,玩法,号码,倍数,金额(元),录入时间');
     for (var i = 0; i < bets.length; i++) {
       final b = bets[i];
-      final amount = (b.multiplier * 2).toStringAsFixed(1);
-      buf.writeln('${i + 1},${b.lotteryType == 1 ? "福彩3D" : "排列三"},${b.playTypeName},${b.number},${b.multiplier},$amount,${DateFormat('yyyy-MM-dd HH:mm:ss').format(b.createTime)}');
+      final amount = (b.multiplier * b.baseAmount).toStringAsFixed(1);
+      buf.writeln('${i + 1},${_escapeCsvField(b.lotteryType == 1 ? "福彩3D" : "排列三")},${_escapeCsvField(b.playTypeName)},${_escapeCsvField(b.number)},${b.multiplier},$amount,${DateFormat('yyyy-MM-dd HH:mm:ss').format(b.createTime)}');
     }
-    final totalAmount = bets.fold<double>(0, (sum, b) => sum + b.multiplier * 2);
+    final totalAmount = bets.fold<double>(0, (sum, b) => sum + b.multiplier * b.baseAmount);
     buf.writeln(',,,,合计:,${totalAmount.toStringAsFixed(1)}元,');
     return buf.toString();
   }
 
   String _generateTXT(List<BetRecord> bets) {
-    final totalAmount = bets.fold<double>(0, (sum, b) => sum + b.multiplier * 2);
+    final totalAmount = bets.fold<double>(0, (sum, b) => sum + b.multiplier * b.baseAmount);
     final lines = <String>['=' * 55, '福彩3D/排列三 投注记录导出', '=' * 55, '', '开发者：杰哥网络科技 · QQ 2711793818', '', '导出时间：${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}', '', '总记录数：${bets.length}', '总金额：${totalAmount.toStringAsFixed(1)}元', '', '-' * 55];
     for (var i = 0; i < bets.length; i++) {
       final b = bets[i];
       final lotteryName = b.lotteryType == 1 ? '福彩3D' : '排列三';
-      final amount = (b.multiplier * 2).toStringAsFixed(1);
+      final amount = (b.multiplier * b.baseAmount).toStringAsFixed(1);
       lines.add('${(i + 1).toString().padRight(4)} | ${lotteryName.padRight(6)} | ${b.playTypeName.padRight(8)} | ${b.number.padLeft(6)} | ${b.multiplier.toString().padLeft(4)}x | ${amount.padLeft(6)}元 | ${DateFormat('MM-dd HH:mm').format(b.createTime)}');
     }
     lines.add('-' * 55);
@@ -53,9 +61,11 @@ class ExportPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bets = Provider.of<BetProvider>(context).bets;
+    final betProvider = Provider.of<BetProvider>(context);
+    final lotteryType = Provider.of<SettingsProvider>(context).defaultLotteryType;
+    final bets = betProvider.bets.where((b) => b.lotteryType == lotteryType).toList();
     if (bets.isEmpty) return const SizedBox.shrink();
-    final totalAmount = bets.fold<double>(0, (sum, b) => sum + b.multiplier * 2);
+    final totalAmount = bets.fold<double>(0, (sum, b) => sum + b.multiplier * b.baseAmount);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

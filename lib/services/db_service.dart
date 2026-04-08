@@ -46,6 +46,7 @@ class DatabaseHelper {
         play_type_name TEXT NOT NULL,
         lottery_type INTEGER DEFAULT 1,
         multiplier REAL DEFAULT 1.0,
+        base_amount REAL DEFAULT 2.0,
         create_time TEXT NOT NULL
       )
     ''');
@@ -67,6 +68,12 @@ class DatabaseHelper {
         default_multiplier REAL DEFAULT 1.0,
         default_lottery_type INTEGER DEFAULT 1,
         last_backup_time TEXT DEFAULT ''
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE play_type_amounts (
+        play_type TEXT PRIMARY KEY,
+        amount REAL NOT NULL
       )
     ''');
     await db.insert('settings', {'id': 1, 'default_multiplier': 1.0, 'default_lottery_type': 1, 'last_backup_time': ''}, conflictAlgorithm: ConflictAlgorithm.replace);
@@ -271,6 +278,43 @@ class DatabaseHelper {
     } catch (e) {
       print('getDigitFrequency error: $e');
       return {};
+    }
+  }
+
+  Future<Map<String, double>> getPlayTypeAmounts() async {
+    try {
+      final db = await database;
+      final result = await db.query('play_type_amounts');
+      Map<String, double> amounts = {};
+      for (final row in result) {
+        final playType = row['play_type'] as String?;
+        final amount = row['amount'] as double?;
+        if (playType != null && amount != null) {
+          amounts[playType] = amount;
+        }
+      }
+      return amounts;
+    } catch (e) {
+      print('getPlayTypeAmounts error: $e');
+      return {};
+    }
+  }
+
+  Future<void> setPlayTypeAmount(String playType, double amount) async {
+    try {
+      final db = await database;
+      await db.insert('play_type_amounts', {'play_type': playType, 'amount': amount}, conflictAlgorithm: ConflictAlgorithm.replace);
+    } catch (e) {
+      print('setPlayTypeAmount error: $e');
+    }
+  }
+
+  Future<void> resetPlayTypeAmounts() async {
+    try {
+      final db = await database;
+      await db.delete('play_type_amounts');
+    } catch (e) {
+      print('resetPlayTypeAmounts error: $e');
     }
   }
 

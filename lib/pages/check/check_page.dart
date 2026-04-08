@@ -142,11 +142,11 @@ class _CheckPageState extends State<CheckPage> {
           ..._buildResultList(),
         ],
         if (!_checking && _results.isEmpty)
-          Padding(padding: const EdgeInsets.symmetric(vertical: 48), child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(Icons.verified_outlined, size: 64, color: AppColors.textLight),
+          Padding(padding: const EdgeInsets.symmetric(vertical: 48), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Center(child: Icon(Icons.verified_outlined, size: 64, color: AppColors.textLight)),
             const SizedBox(height: 12),
-            Text('输入开奖号码开始校验', style: TextStyle(fontSize: 15, color: AppColors.textSecondary)),
-          ]))),
+            Center(child: Text('输入开奖号码开始校验', style: TextStyle(fontSize: 15, color: AppColors.textSecondary))),
+          ])),
       ]),
     ));
   }

@@ -48,7 +48,7 @@ class _StatsPageState extends State<StatsPage> {
     final lotteryType = settings.defaultLotteryType;
 
     final filteredBets = betProvider.bets.where((b) => b.lotteryType == lotteryType).toList();
-    final totalAmount = filteredBets.fold<double>(0, (sum, b) => sum + b.multiplier * 2);
+    final totalAmount = filteredBets.fold<double>(0, (sum, b) => sum + b.multiplier * b.baseAmount);
     final totalMultiplier = filteredBets.fold<double>(0, (sum, b) => sum + b.multiplier);
     final playTypeCount = filteredBets.map((b) => b.playType).toSet().length;
 
@@ -167,7 +167,7 @@ class _StatsPageState extends State<StatsPage> {
           final bets = e.value;
           final config = PlayTypes.getByCode(playTypeCode);
           final color = config?.color ?? AppColors.primary;
-          final amount = bets.fold<double>(0, (sum, b) => sum + b.multiplier * 2);
+          final amount = bets.fold<double>(0, (sum, b) => sum + b.multiplier * b.baseAmount);
           final totalForType = bets.length;
 
           return Container(

@@ -13,7 +13,7 @@ class PlayTypeChips extends StatefulWidget {
 }
 
 class _PlayTypeChipsState extends State<PlayTypeChips> {
-  final Set<String> _expandedCategories = {'基础'};
+  final Set<String> _expandedCategories = {'基础三码'};
 
   @override
   Widget build(BuildContext context) {

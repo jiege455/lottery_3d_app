@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../models/draw_record.dart';
 import '../../../../providers/settings_provider.dart';
 import '../../../../services/db_service.dart';
+import '../../../../services/lottery_api_service.dart';
 import '../../../../widgets/empty_state.dart';
 import '../../../../widgets/toast.dart';
 
@@ -19,6 +20,7 @@ class _DrawDataListState extends State<DrawDataList> {
   bool _loading = false;
   bool _loaded = false;
   bool _showAll = false;
+  bool _syncing = false;
 
   @override
   void initState() {
@@ -41,6 +43,27 @@ class _DrawDataListState extends State<DrawDataList> {
     } catch (e) {
       print('DrawDataList._loadData error: $e');
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _syncFromApi() async {
+    if (_syncing) return;
+    setState(() => _syncing = true);
+    try {
+      final lotteryType = Provider.of<SettingsProvider>(context, listen: false).defaultLotteryType;
+      final count = await LotteryApiService.syncDraws(lotteryType: lotteryType, count: 20);
+      await _loadData();
+      if (mounted) {
+        if (count > 0) {
+          ToastUtil.success(context, '同步成功，新增 $count 条开奖数据');
+        } else {
+          ToastUtil.success(context, '已同步，暂无新数据');
+        }
+      }
+    } catch (e) {
+      if (mounted) ToastUtil.error(context, '同步失败：$e');
+    } finally {
+      if (mounted) setState(() => _syncing = false);
     }
   }
 
@@ -156,6 +179,7 @@ class _DrawDataListState extends State<DrawDataList> {
                 IconButton(onPressed: _showAddDialog, icon: const Icon(Icons.add, size: 18), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
                 IconButton(onPressed: _showBatchAddDialog, icon: const Icon(Icons.playlist_add, size: 18), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
                 IconButton(onPressed: _loadData, icon: const Icon(Icons.refresh, size: 18), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
+                IconButton(onPressed: _syncing ? null : _syncFromApi, icon: _syncing ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.cloud_download, size: 18), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
               ]),
             ],
           ),

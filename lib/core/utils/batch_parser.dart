@@ -9,6 +9,7 @@ class ParsedItem {
   final String playTypeName;
   double multiplier;
   Color color;
+  double baseAmount;
 
   ParsedItem({
     required this.number,
@@ -16,6 +17,7 @@ class ParsedItem {
     required this.playTypeName,
     this.multiplier = 1.0,
     required this.color,
+    this.baseAmount = 2.0,
   });
 }
 
@@ -117,7 +119,7 @@ class BatchParser {
       final mult = _extractMultiplier(trimmed);
       final numStr = trimmed.replaceAll(_multiplierRegex, '').trim();
       if (numStr.isEmpty) continue;
-      items.add(ParsedItem(number: numStr, playType: config.code, playTypeName: config.name, multiplier: mult ?? defaultMultiplier, color: config.color));
+      items.add(ParsedItem(number: numStr, playType: config.code, playTypeName: config.name, multiplier: mult ?? defaultMultiplier, color: config.color, baseAmount: config.baseAmount));
     }
     return items;
   }
@@ -140,6 +142,6 @@ class BatchParser {
   static ParsedItem _createItem(String number, PlayTypeConfig config, double multiplier) {
     final mult = _extractMultiplier(number) ?? multiplier;
     final cleanNum = number.replaceAll(_multiplierRegex, '').trim();
-    return ParsedItem(number: cleanNum.isEmpty ? number : cleanNum, playType: config.code, playTypeName: config.name, multiplier: mult, color: config.color);
+    return ParsedItem(number: cleanNum.isEmpty ? number : cleanNum, playType: config.code, playTypeName: config.name, multiplier: mult, color: config.color, baseAmount: config.baseAmount);
   }
 }

@@ -64,7 +64,17 @@ class _EntryPageState extends State<EntryPage> {
       setState(() {
         _parsedItems = BatchParser.parse(value, forcePlayType: _selectedPlayType, defaultMultiplier: _getDefaultMultiplier());
       });
+      _applyCustomAmounts();
     });
+  }
+
+  void _applyCustomAmounts() {
+    if (!mounted) return;
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    for (final item in _parsedItems) {
+      item.baseAmount = settings.getPlayTypeAmount(item.playType);
+    }
+    if (mounted) setState(() {});
   }
 
   double _getDefaultMultiplier() => double.tryParse(_multiplierController.text) ?? 1.0;
@@ -74,7 +84,7 @@ class _EntryPageState extends State<EntryPage> {
   double get _totalAmount {
     double total = 0;
     for (final item in _parsedItems) {
-      total += item.multiplier * 2;
+      total += item.multiplier * item.baseAmount;
     }
     return total;
   }
@@ -91,6 +101,7 @@ class _EntryPageState extends State<EntryPage> {
         playTypeName: item.playTypeName,
         lotteryType: _lotteryType,
         multiplier: item.multiplier,
+        baseAmount: item.baseAmount,
       )).toList();
       await Provider.of<BetProvider>(context, listen: false).addBetsBatch(bets);
       ToastUtil.success(context, '成功保存 ${bets.length} 条记录');
@@ -138,7 +149,7 @@ class _EntryPageState extends State<EntryPage> {
             const SizedBox(height: 4),
             _buildMultiplierSection(),
             const SizedBox(height: 4),
-            PlayTypeChips(selectedPlayType: _selectedPlayType, onChanged: (code) => setState(() => _selectedPlayType = code)),
+            PlayTypeChips(selectedPlayType: _selectedPlayType, onChanged: (code) { setState(() => _selectedPlayType = code); _applyCustomAmounts(); }),
             RuleHintBox(playTypeCode: _selectedPlayType),
             BatchInput(controller: _inputController, onChanged: _onInputChanged),
             PreviewList(items: _parsedItems),

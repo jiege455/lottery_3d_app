@@ -5,17 +5,32 @@ import '../models/draw_record.dart';
 import 'db_service.dart';
 
 class LotteryApiService {
-  static const String _fc3dUrl = 'https://www.lottery.gov.cn/api/lottery_kj_detail_new.jspx?_ltype=dlt';
-  static const String _plsUrl = 'https://www.lottery.gov.cn/api/lottery_kj_detail_new.jspx?_ltype=pls';
+  static const String _baseUrl = 'https://www.mxnzp.com/api';
+  static const String _appId = 'mkpnhppwki8qckna';
+  static const String _appSecret = 'nisM90bxTLIUBoI';
+
+  static const Map<int, String> _lotteryCodes = {
+    1: 'fc3d',
+    2: 'pl3',
+    3: 'pl5',
+  };
 
   static Future<List<DrawRecord>> fetchLatestDraws({required int lotteryType, int count = 10}) async {
     try {
-      final url = lotteryType == 1 ? _fc3dUrl : _plsUrl;
-      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
+      final code = _lotteryCodes[lotteryType] ?? 'fc3d';
+      final url = '$_baseUrl/lottery/$code/lottery_list?page=1&limit=$count';
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'app_id': _appId,
+          'app_secret': _appSecret,
+        },
+      ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return _parseDrawData(data, lotteryType, count);
+        return _parseDrawData(data, lotteryType);
       }
       return [];
     } catch (e) {
@@ -24,49 +39,44 @@ class LotteryApiService {
     }
   }
 
-  static List<DrawRecord> _parseDrawData(dynamic data, int lotteryType, int count) {
+  static List<DrawRecord> _parseDrawData(dynamic data, int lotteryType) {
     final results = <DrawRecord>[];
     try {
-      if (data is Map && data.containsKey('result')) {
-        final list = data['result'] as List;
-        for (var i = 0; i < list.length && i < count; i++) {
-          final item = list[i];
-          final issue = item['issue'] ?? item['code'] ?? '';
-          final numbers = item['number'] ?? item['red'] ?? '';
-          if (numbers is String && numbers.isNotEmpty) {
-            final cleanNum = numbers.replaceAll(' ', '').replaceAll(',', '');
-            if (RegExp(r'^[0-9]{3}$').hasMatch(cleanNum)) {
-              results.add(DrawRecord(
-                issue: issue.toString(),
-                numbers: cleanNum,
-                sumValue: DrawRecord.getSumValue(cleanNum),
-                span: DrawRecord.getSpan(cleanNum),
-                formType: DrawRecord.getFormType(cleanNum),
-                drawDate: DateTime.now(),
-                lotteryType: lotteryType,
-              ));
+      if (data is Map) {
+        final code = data['code'];
+        if (code == 1) {
+          final dataObj = data['data'];
+          if (dataObj is Map) {
+            final list = dataObj['list'] as List? ?? [];
+            for (final item in list) {
+              final openCode = item['openCode'] ?? '';
+              final expect = item['expect'] ?? '';
+              final time = item['time'] ?? '';
+
+              String cleanNum = openCode.toString().replaceAll(' ', '').replaceAll(',', '').replaceAll('+', '');
+              if (cleanNum.length >= 3) {
+                cleanNum = cleanNum.substring(0, 3);
+              }
+
+              if (RegExp(r'^[0-9]{3}$').hasMatch(cleanNum)) {
+                DateTime drawDate = DateTime.now();
+                try {
+                  if (time.isNotEmpty) {
+                    drawDate = DateTime.parse(time);
+                  }
+                } catch (_) {}
+
+                results.add(DrawRecord(
+                  issue: expect.toString(),
+                  numbers: cleanNum,
+                  sumValue: DrawRecord.getSumValue(cleanNum),
+                  span: DrawRecord.getSpan(cleanNum),
+                  formType: DrawRecord.getFormType(cleanNum),
+                  drawDate: drawDate,
+                  lotteryType: lotteryType,
+                ));
+              }
             }
-          }
-        }
-      } else if (data is List) {
-        for (var i = 0; i < data.length && i < count; i++) {
-          final item = data[i];
-          final issue = item['issue'] ?? item['expect'] ?? '';
-          final numbers = item['opencode'] ?? item['number'] ?? item['red'] ?? '';
-          String cleanNum = numbers.toString().replaceAll(' ', '').replaceAll(',', '');
-          if (cleanNum.length >= 3) {
-            cleanNum = cleanNum.substring(0, 3);
-          }
-          if (RegExp(r'^[0-9]{3}$').hasMatch(cleanNum)) {
-            results.add(DrawRecord(
-              issue: issue.toString(),
-              numbers: cleanNum,
-              sumValue: DrawRecord.getSumValue(cleanNum),
-              span: DrawRecord.getSpan(cleanNum),
-              formType: DrawRecord.getFormType(cleanNum),
-              drawDate: DateTime.now(),
-              lotteryType: lotteryType,
-            ));
           }
         }
       }

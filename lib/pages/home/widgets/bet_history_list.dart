@@ -60,7 +60,7 @@ class _BetHistoryListState extends State<BetHistoryList> {
   Widget build(BuildContext context) {
     final filteredBets = _getFilteredBets();
     final displayBets = filteredBets.take(_pageSize).toList();
-    final totalAmount = filteredBets.fold<double>(0, (sum, b) => sum + b.multiplier * 2);
+    final totalAmount = filteredBets.fold<double>(0, (sum, b) => sum + b.multiplier * b.baseAmount);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -94,7 +94,7 @@ class _BetHistoryListState extends State<BetHistoryList> {
       playColor = AppColors.playTypeColors[cat] ?? AppColors.primary;
     } catch (_) {}
 
-    final amount = bet.multiplier * 2;
+    final amount = bet.multiplier * bet.baseAmount;
 
     return Container(margin: const EdgeInsets.only(bottom: 6), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(borderRadius: BorderRadius.circular(AppStyles.radiusXs), border: Border.all(color: AppColors.border.withOpacity(0.5))), child: Row(children: [
       Expanded(flex: 2, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

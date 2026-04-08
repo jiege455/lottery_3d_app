@@ -5,6 +5,7 @@ class BetRecord {
   final String playTypeName;
   int lotteryType;
   double multiplier;
+  double baseAmount;
   final DateTime createTime;
 
   BetRecord({
@@ -14,6 +15,7 @@ class BetRecord {
     required this.playTypeName,
     this.lotteryType = 1,
     this.multiplier = 1.0,
+    this.baseAmount = 2.0,
     DateTime? createTime,
   }) : createTime = createTime ?? DateTime.now();
 
@@ -25,6 +27,7 @@ class BetRecord {
       'play_type_name': playTypeName,
       'lottery_type': lotteryType,
       'multiplier': multiplier,
+      'base_amount': baseAmount,
       'create_time': createTime.toIso8601String(),
     };
   }
@@ -37,6 +40,7 @@ class BetRecord {
       playTypeName: map['play_type_name'] ?? '直选',
       lotteryType: map['lottery_type'] ?? 1,
       multiplier: (map['multiplier'] ?? 1.0).toDouble(),
+      baseAmount: (map['base_amount'] ?? 2.0).toDouble(),
       createTime: map['create_time'] != null ? (DateTime.tryParse(map['create_time']) ?? DateTime.now()) : DateTime.now(),
     );
   }
@@ -48,15 +52,17 @@ class BetRecord {
     String? playTypeName,
     int? lotteryType,
     double? multiplier,
+    double? baseAmount,
     DateTime? createTime,
   }) {
     return BetRecord(
       id: id ?? this.id,
-      number: number ?? this.number,
+      number: this.number,
       playType: playType ?? this.playType,
       playTypeName: playTypeName ?? this.playTypeName,
       lotteryType: lotteryType ?? this.lotteryType,
       multiplier: multiplier ?? this.multiplier,
+      baseAmount: baseAmount ?? this.baseAmount,
       createTime: createTime ?? this.createTime,
     );
   }
