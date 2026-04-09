@@ -10,6 +10,23 @@
 .svn/
 migrate_working_dir/
 
+# Windows related
+*.bat
+*.cmd
+*.exe
+Thumbs.db
+Desktop.ini
+
+# Text files (except README)
+*.txt
+!README.md
+!BUILD_INSTRUCTIONS.md
+
+# Test reports and docs
+test/*.md
+test/*_report.*
+test/*_test.*
+
 # IntelliJ related
 *.iml
 *.ipr
