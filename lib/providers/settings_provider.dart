@@ -23,9 +23,10 @@ class SettingsProvider with ChangeNotifier {
   }
 
   void _initDefaultAmounts() {
-    _defaultAmounts = {
-      for (final pt in PlayTypes.all) pt.code: pt.baseAmount,
-    };
+    _defaultAmounts = {};
+    for (final pt in PlayTypes.all) {
+      _defaultAmounts[pt.code] = pt.baseAmount;
+    }
   }
 
   double getPlayTypeAmount(String playType) {
