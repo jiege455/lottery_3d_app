@@ -41,24 +41,23 @@ class BatchParser {
     return map;
   }();
 
+  static final RegExp _posCompositeRegex = RegExp(r'百位?\s*(\d+).*?十位?\s*(\d+).*?个位?\s*(\d+)');
+
   static bool _isPosCompositeFormat(String line) {
     final clean = line.replaceAll(_multiplierRegex, '').trim();
-    return RegExp(r'百\d+十\d+个\d+').hasMatch(clean);
+    return _posCompositeRegex.hasMatch(clean);
   }
 
   static List<ParsedItem> _parsePosComposite(String line, {String? forcePlayType, double defaultMultiplier = 1.0}) {
     final mult = _extractMultiplier(line);
     final cleanLine = line.replaceAll(_multiplierRegex, '').trim();
 
-    final baiMatch = RegExp(r'百(\d+)').firstMatch(cleanLine);
-    final shiMatch = RegExp(r'十(\d+)').firstMatch(cleanLine);
-    final geMatch = RegExp(r'个(\d+)').firstMatch(cleanLine);
+    final match = _posCompositeRegex.firstMatch(cleanLine);
+    if (match == null) return [];
 
-    if (baiMatch == null || shiMatch == null || geMatch == null) return [];
-
-    final baiDigits = baiMatch.group(1)!.split('').toSet().toList()..sort();
-    final shiDigits = shiMatch.group(1)!.split('').toSet().toList()..sort();
-    final geDigits = geMatch.group(1)!.split('').toSet().toList()..sort();
+    final baiDigits = match.group(1)!.split('').toSet().toList()..sort();
+    final shiDigits = match.group(2)!.split('').toSet().toList()..sort();
+    final geDigits = match.group(3)!.split('').toSet().toList()..sort();
 
     final items = <ParsedItem>[];
     final effectiveMultiplier = mult ?? defaultMultiplier;
@@ -123,12 +122,12 @@ class BatchParser {
   }
 
   static List<ParsedItem> _parseLine(String line, {String? forcePlayType, double defaultMultiplier = 1.0}) {
-    final config = forcePlayType != null ? PlayTypes.getByCode(forcePlayType) : null;
-    if (config != null && config.isWholeLine) return [_createItem(line, config, defaultMultiplier)];
-
     if (_isPosCompositeFormat(line)) {
       return _parsePosComposite(line, forcePlayType: forcePlayType, defaultMultiplier: defaultMultiplier);
     }
+
+    final config = forcePlayType != null ? PlayTypes.getByCode(forcePlayType) : null;
+    if (config != null && config.isWholeLine) return [_createItem(line, config, defaultMultiplier)];
 
     final prefixMatch = _detectPrefix(line);
     if (prefixMatch != null) return _parseWithPrefix(line, prefixMatch, defaultMultiplier);
