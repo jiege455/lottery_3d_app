@@ -38,7 +38,8 @@ class BetProvider with ChangeNotifier {
   Future<void> addBetsBatch(List<BetRecord> bets) async {
     try {
       await _db.insertBetsBatch(bets);
-      await loadBets();
+      _bets.addAll(bets);
+      notifyListeners();
     } catch (e) {
       print('BetProvider.addBetsBatch error: $e');
     }
