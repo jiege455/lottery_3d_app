@@ -51,9 +51,7 @@ class LotteryApiService {
         throw Exception('HTTP ${response.statusCode}');
       }
     } on TimeoutException {
-      throw Exception('请求超时（20秒）');
-    } finally {
-      
+      throw Exception('请求超时');
     }
   }
 
@@ -66,42 +64,33 @@ class LotteryApiService {
         final url = '${api['baseUrl']}?${api['params']}'.replaceAll('{code}', code).replaceAll('{count}', count.toString());
         final headers = api['headers'] != null ? Map<String, String>.from(api['headers']) : null;
 
-        print('[LotteryApi] 尝试使用 ${api['name']} (${attempt + 1}/${_apiEndpoints.length})');
-        print('[LotteryApi] 请求 URL: $url');
+        print('[LotteryApi] 尝试 ${api['name']} (${attempt + 1}/${_apiEndpoints.length})');
 
         final responseBody = await _fetchUrl(url, headers);
-        print('[LotteryApi] 响应成功，长度: ${responseBody.length}');
 
-        if (responseBody.contains('异常') || responseBody.contains('检测到')) {
-          throw Exception('被反爬虫拦截');
-        }
-
-        if (responseBody.contains('nginx') || responseBody.isEmpty) {
-          throw Exception('响应内容无效');
+        if (responseBody.contains('异常') || responseBody.contains('检测到') || responseBody.contains('nginx') || responseBody.isEmpty) {
+          throw Exception('响应无效');
         }
 
         final data = json.decode(responseBody);
         final results = _parseDrawData(data, lotteryType, api['name']);
         
         if (results.isNotEmpty) {
-          print('[LotteryApi] ✅ ${api['name']} 成功获取 ${results.length} 条数据');
+          print('[LotteryApi] ${api['name']} 成功获取 ${results.length} 条');
           return results;
         } else {
-          throw Exception('解析后无有效数据');
+          throw Exception('无有效数据');
         }
       } catch (e) {
-        print('[LotteryApi] ❌ ${_apiEndpoints[_currentApiIndex]['name']} 失败: $e');
-        
+        print('[LotteryApi] ${_apiEndpoints[_currentApiIndex]['name']} 失败: $e');
         _currentApiIndex = (_currentApiIndex + 1) % _apiEndpoints.length;
-        
         if (attempt < _apiEndpoints.length - 1) {
-          print('[LotteryApi] 切换到备用 API: ${_apiEndpoints[_currentApiIndex]['name']}');
-          await Future.delayed(const Duration(milliseconds: 1000));
+          await Future.delayed(const Duration(milliseconds: 500));
         }
       }
     }
 
-    throw Exception('所有 API 均无法获取开奖数据，请检查网络连接或稍后重试');
+    throw Exception('所有 API 均无法获取开奖数据');
   }
 
   static List<DrawRecord> _parseDrawData(dynamic data, int lotteryType, String? apiName) {
@@ -197,7 +186,7 @@ class LotteryApiService {
         }
       }
     } catch (e) {
-      print('[LotteryApi] 解析数据错误 ($apiName): $e');
+      print('[LotteryApi] 解析错误: $e');
     }
     
     return results;
@@ -219,7 +208,7 @@ class LotteryApiService {
         }
       }
       
-      print('[LotteryApi] 同步完成: 新增 $addedCount 条数据');
+      print('[LotteryApi] 同步完成: 新增 $addedCount 条');
       return addedCount;
     } catch (e) {
       print('[LotteryApi] syncDraws error: $e');
