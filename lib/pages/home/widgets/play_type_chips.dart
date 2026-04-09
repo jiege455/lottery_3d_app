@@ -31,10 +31,12 @@ class _PlayTypeChipsState extends State<PlayTypeChips> {
               GestureDetector(
                 onTap: () {
                   setState(() {
-                    if (_expandedCategories.length == PlayTypes.categories.length) {
+                    final isAllExpanded = _expandedCategories.length == PlayTypes.categories.length;
+                    if (isAllExpanded) {
                       _expandedCategories.clear();
-                      _expandedCategories.add('基础');
+                      _expandedCategories.add('基础三码');
                     } else {
+                      _expandedCategories.clear();
                       _expandedCategories.addAll(PlayTypes.categories);
                     }
                   });
@@ -58,8 +60,35 @@ class _PlayTypeChipsState extends State<PlayTypeChips> {
             ],
           ),
           const SizedBox(height: 10),
+          _buildAutoChip(),
+          const SizedBox(height: 8),
           ...PlayTypes.categories.map((cat) => _buildCategorySection(cat)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAutoChip() {
+    final isAuto = widget.selectedPlayType == 'auto';
+    return GestureDetector(
+      onTap: () => widget.onChanged('auto'),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isAuto ? AppColors.primary : AppColors.primaryLight,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isAuto ? AppColors.primary : Colors.transparent, width: 1),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Icons.auto_awesome, size: 14, color: isAuto ? Colors.white : AppColors.primary),
+          const SizedBox(width: 4),
+          Text('自动识别', style: TextStyle(color: isAuto ? Colors.white : AppColors.primary, fontSize: 13, fontWeight: FontWeight.w600)),
+          if (isAuto) ...[
+            const SizedBox(width: 4),
+            Text('智能匹配每行玩法', style: TextStyle(fontSize: 10, color: Colors.white70)),
+          ],
+        ]),
       ),
     );
   }
