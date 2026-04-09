@@ -1,84 +1,159 @@
 import 'dart:convert';
 import 'dart:async';
-import 'package:http/http.dart' as http;
+import 'dart:io' as io;
 import '../models/draw_record.dart';
 import 'db_service.dart';
 
 class LotteryApiService {
-  static const String _baseUrl = 'https://www.mxnzp.com/api';
-  static const String _appId = 'mkpnhppwki8qckna';
-  static const String _appSecret = 'nisM90bxTLIUBoIpViKFwNmMMyT7aVrF';
-
   static const Map<int, String> _lotteryCodes = {
     1: 'fc3d',
-    2: 'pl3',
+    2: 'pls',
   };
 
-  static Future<List<DrawRecord>> fetchLatestDraws({required int lotteryType, int count = 10}) async {
+  static final List<Map<String, String>> _apiEndpoints = [
+    {
+      'name': '彩鸟API',
+      'baseUrl': 'http://api.huiniao.top/interface/home',
+      'historyPath': '/lotteryHistory',
+      'params': 'type={code}&page=1&limit={count}',
+    },
+    {
+      'name': '备用API - 起零数据',
+      'baseUrl': 'https://api.istero.com/resource/v1/lottery',
+      'historyPath': '/{code}/history',
+      'params': 'count={count}',
+    },
+  ];
+
+  static int _currentApiIndex = 0;
+
+  static Future<String> _fetchUrl(String url) async {
+    final client = io.HttpClient();
     try {
-      final code = _lotteryCodes[lotteryType] ?? 'fc3d';
-      final url = '$_baseUrl/lottery/common/latest?code=$code&app_id=$_appId&app_secret=$_appSecret';
-
-      print('请求 API: $url');
-
-      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 15));
-
-      print('响应状态码：${response.statusCode}');
-      print('响应内容：${response.body}');
-
+      final request = await client.getUrl(Uri.parse(url));
+      final response = await request.close().timeout(const Duration(seconds: 15));
+      
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        print('解析后的数据：$data');
-        
-        final msg = data['msg'];
-        if (msg != null && msg.toString().contains('不合法')) {
-          throw Exception('API 密钥验证失败，请检查 app_id 和 app_secret 是否正确');
-        }
-        
-        return _parseDrawData(data, lotteryType);
+        final content = await response.transform(utf8.decoder).join();
+        return content;
       } else {
-        print('API 请求失败，状态码：${response.statusCode}');
-        throw Exception('API 请求失败：${response.statusCode}');
+        throw Exception('HTTP ${response.statusCode}');
       }
-    } catch (e) {
-      print('LotteryApiService.fetchLatestDraws error: $e');
-      rethrow;
+    } finally {
+      client.close();
     }
+  }
+
+  static Future<List<DrawRecord>> fetchLatestDraws({required int lotteryType, int count = 10}) async {
+    final code = _lotteryCodes[lotteryType] ?? 'fc3d';
+    
+    for (int attempt = 0; attempt < _apiEndpoints.length; attempt++) {
+      try {
+        final api = _apiEndpoints[_currentApiIndex];
+        final url = '${api['baseUrl']}${api['historyPath']}?${api['params']}'.replaceAll('{code}', code).replaceAll('{count}', count.toString());
+
+        print('[LotteryApi] 尝试使用 ${api['name']} (${attempt + 1}/${_apiEndpoints.length})');
+        print('[LotteryApi] 请求 URL: $url');
+
+        final responseBody = await _fetchUrl(url);
+        print('[LotteryApi] 响应成功，长度: ${responseBody.length}');
+
+        final data = json.decode(responseBody);
+        final results = _parseDrawData(data, lotteryType);
+        
+        if (results.isNotEmpty) {
+          print('[LotteryApi] ${api['name']} 成功获取 ${results.length} 条数据');
+          return results;
+        } else {
+          throw Exception('解析后无有效数据');
+        }
+      } catch (e) {
+        print('[LotteryApi] ${_apiEndpoints[_currentApiIndex]['name']} 失败: $e');
+        
+        _currentApiIndex = (_currentApiIndex + 1) % _apiEndpoints.length;
+        
+        if (attempt < _apiEndpoints.length - 1) {
+          print('[LotteryApi] 切换到备用 API: ${_apiEndpoints[_currentApiIndex]['name']}');
+          await Future.delayed(const Duration(milliseconds: 500));
+        }
+      }
+    }
+
+    throw Exception('所有 API 均无法获取开奖数据');
   }
 
   static List<DrawRecord> _parseDrawData(dynamic data, int lotteryType) {
     final results = <DrawRecord>[];
+    
     try {
-      print('开始解析数据：$data');
+      if (data is! Map) return results;
+
+      final code = data['code'];
       
-      if (data is Map) {
-        final code = data['code'];
-        print('API 返回 code: $code');
+      if (code == 1 || code == 200 || code == '0000' || data['status'] == true || data['success'] == true) {
+        var dataList = <dynamic>[];
         
-        if (code == 1) {
+        if (data['data'] is Map) {
           final dataObj = data['data'];
-          if (dataObj is Map) {
-            final openCode = dataObj['openCode'] ?? '';
-            final expect = dataObj['expect'] ?? '';
-            final time = dataObj['time'] ?? '';
+          dataList = dataObj['list'] ?? dataObj['data'] ?? dataObj['result'] ?? [];
+        } else if (data['data'] is List) {
+          dataList = data['data'];
+        } else if (data['result'] is List) {
+          dataList = data['result'];
+        } else if (data['list'] is List) {
+          dataList = data['list'];
+        }
 
-            print('解析数据 - 期号：$expect, 号码：$openCode');
+        if (dataList.isEmpty && data['data'] != null) {
+          dataList = [data['data']];
+        }
 
-            String cleanNum = openCode.toString().replaceAll(' ', '').replaceAll(',', '');
+        for (var item in dataList) {
+          if (item is Map) {
+            String issue = '';
+            String openCode = '';
+            String time = '';
+
+            issue = (item['expect'] ?? item['issue'] ?? item['code'] ?? item['period'] ?? '').toString();
+            
+            final one = item['one'] ?? item['red'] ?? item['number1'] ?? item['n1'] ?? 0;
+            final two = item['two'] ?? item['blue'] ?? item['number2'] ?? item['n2'] ?? 0;
+            final three = item['three'] ?? item['green'] ?? item['number3'] ?? item['n3'] ?? 0;
+            
+            if (one != 0 && two != 0 && three != 0) {
+              openCode = '$one$two$three';
+            } else {
+              openCode = (item['open_code'] ?? item['opencode'] ?? item['drawnum'] ?? item['number'] ?? item['winNumber'] ?? '').toString();
+            }
+            
+            time = (item['opentime'] ?? item['open_time'] ?? item['time'] ?? item['date'] ?? item['drawTime'] ?? '').toString();
+
+            String cleanNum = openCode.replaceAll(RegExp(r'[^\d]'), '');
             if (cleanNum.length >= 3) {
               cleanNum = cleanNum.substring(0, 3);
             }
 
-            if (RegExp(r'^[0-9]{3}$').hasMatch(cleanNum)) {
+            if (RegExp(r'^[0-9]{3}$').hasMatch(cleanNum) && issue.isNotEmpty) {
               DateTime drawDate = DateTime.now();
               try {
                 if (time.isNotEmpty) {
-                  drawDate = DateTime.parse(time);
+                  if (time.contains('-') || time.contains('/')) {
+                    drawDate = DateTime.parse(time);
+                  } else if (RegExp(r'^\d{14}$').hasMatch(time)) {
+                    drawDate = DateTime(
+                      int.tryParse(time.substring(0, 4)) ?? DateTime.now().year,
+                      int.tryParse(time.substring(4, 6)) ?? 1,
+                      int.tryParse(time.substring(6, 8)) ?? 1,
+                      int.tryParse(time.substring(8, 10)) ?? 0,
+                      int.tryParse(time.substring(10, 12)) ?? 0,
+                      int.tryParse(time.substring(12, 14)) ?? 0,
+                    );
+                  }
                 }
               } catch (_) {}
 
               results.add(DrawRecord(
-                issue: expect.toString(),
+                issue: issue,
                 numbers: cleanNum,
                 sumValue: DrawRecord.getSumValue(cleanNum),
                 span: DrawRecord.getSpan(cleanNum),
@@ -86,40 +161,48 @@ class LotteryApiService {
                 drawDate: drawDate,
                 lotteryType: lotteryType,
               ));
-            } else {
-              print('号码格式不正确：$cleanNum');
             }
-          } else {
-            print('data 不是 Map 类型');
           }
-        } else {
-          print('API 返回失败，code != 1');
-          throw Exception('API 返回错误：${data['msg'] ?? '未知错误'}');
         }
-      } else {
-        print('返回数据不是 Map 类型');
       }
     } catch (e) {
-      print('LotteryApiService._parseDrawData error: $e');
-      rethrow;
+      print('[LotteryApi] 解析数据错误: $e');
     }
+    
     return results;
   }
 
-  static Future<int> syncDraws({required int lotteryType, int count = 20}) async {
-    final draws = await fetchLatestDraws(lotteryType: lotteryType, count: count);
-    if (draws.isEmpty) return 0;
+  static Future<int> syncDraws({required int lotteryType, int count = 10}) async {
+    try {
+      final draws = await fetchLatestDraws(lotteryType: lotteryType, count: count);
+      if (draws.isEmpty) return 0;
 
-    final existingDraws = await DatabaseHelper.instance.getAllDraws(lotteryType: lotteryType);
-    final existingIssues = existingDraws.map((d) => d.issue).toSet();
+      final existingDraws = await DatabaseHelper.instance.getAllDraws(lotteryType: lotteryType);
+      final existingIssues = existingDraws.map((d) => d.issue).toSet();
 
-    int addedCount = 0;
-    for (final draw in draws) {
-      if (!existingIssues.contains(draw.issue)) {
-        await DatabaseHelper.instance.insertDraw(draw);
-        addedCount++;
+      int addedCount = 0;
+      for (final draw in draws) {
+        if (!existingIssues.contains(draw.issue)) {
+          await DatabaseHelper.instance.insertDraw(draw);
+          addedCount++;
+        }
       }
+      
+      print('[LotteryApi] 同步完成: 新增 $addedCount 条数据');
+      return addedCount;
+    } catch (e) {
+      print('[LotteryApi] syncDraws error: $e');
+      return 0;
     }
-    return addedCount;
+  }
+
+  static Future<DrawRecord?> getLatestDraw({required int lotteryType}) async {
+    try {
+      final draws = await fetchLatestDraws(lotteryType: lotteryType, count: 1);
+      return draws.isNotEmpty ? draws.first : null;
+    } catch (e) {
+      print('[LotteryApi] getLatestDraw error: $e');
+      return null;
+    }
   }
 }
