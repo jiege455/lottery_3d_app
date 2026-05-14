@@ -7,6 +7,7 @@ class CheckResult {
   final String winType;
   final double winAmount;
   final double betAmount;
+  final bool paidStatus;
 
   const CheckResult({
     required this.bet,
@@ -14,6 +15,7 @@ class CheckResult {
     required this.winType,
     required this.winAmount,
     required this.betAmount,
+    this.paidStatus = false,
   });
 }
 
@@ -85,7 +87,7 @@ class CheckService {
   static CheckResult checkSingle(BetRecord bet, DrawRecord draw, [double customWinAmount = 0.0]) {
     final nums = draw.numbers;
     if (nums.length != 3 || bet.number.isEmpty) {
-      return CheckResult(bet: bet, isWin: false, winType: '', winAmount: 0, betAmount: bet.multiplier * bet.baseAmount);
+      return CheckResult(bet: bet, isWin: false, winType: '', winAmount: 0, betAmount: bet.multiplier * bet.baseAmount, paidStatus: bet.paidStatus);
     }
 
     bool isWin = false;
@@ -281,6 +283,7 @@ class CheckService {
       winType: winType,
       winAmount: winAmount,
       betAmount: bet.multiplier * bet.baseAmount,
+      paidStatus: bet.paidStatus,
     );
   }
 

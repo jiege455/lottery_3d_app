@@ -36,7 +36,7 @@ class DatabaseHelper {
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
-    return await openDatabase(path, version: 6, onCreate: _onCreate, onUpgrade: _onUpgrade);
+    return await openDatabase(path, version: 8, onCreate: _onCreate, onUpgrade: _onUpgrade);
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -50,7 +50,8 @@ class DatabaseHelper {
         multiplier REAL DEFAULT 1.0,
         base_amount REAL DEFAULT 2.0,
         batch_id TEXT DEFAULT '',
-        create_time TEXT NOT NULL
+        create_time TEXT NOT NULL,
+        paid_status INTEGER DEFAULT 0
       )
     ''');
     await db.execute('CREATE INDEX idx_bet_lottery_type ON bet_records(lottery_type)');
@@ -125,7 +126,8 @@ class DatabaseHelper {
         play_type_name TEXT NOT NULL,
         pattern TEXT NOT NULL,
         priority INTEGER DEFAULT 100,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        play_types TEXT DEFAULT ""
       )
     ''');
   }
@@ -224,6 +226,36 @@ class DatabaseHelper {
         ''');
       } catch (e) {
         print('Database upgrade v6 error: $e');
+      }
+    }
+    if (oldVersion < 7) {
+      try {
+        // 检查 play_types 字段是否存在
+        final columns = await db.rawQuery('PRAGMA table_info(learned_patterns)');
+        final hasPlayTypes = columns.any((c) => c['name'] == 'play_types');
+        if (!hasPlayTypes) {
+          await db.execute('ALTER TABLE learned_patterns ADD COLUMN play_types TEXT DEFAULT ""');
+        }
+      } catch (e) {
+        print('Database upgrade v7 error: $e');
+      }
+    }
+    if (oldVersion < 8) {
+      try {
+        final betColumns = await db.rawQuery('PRAGMA table_info(bet_records)');
+        final hasPaidStatus = betColumns.any((c) => c['name'] == 'paid_status');
+        if (!hasPaidStatus) {
+          await db.execute('ALTER TABLE bet_records ADD COLUMN paid_status INTEGER DEFAULT 0');
+          await db.execute('CREATE INDEX IF NOT EXISTS idx_bet_paid_status ON bet_records(paid_status)');
+        }
+
+        final lpColumns = await db.rawQuery('PRAGMA table_info(learned_patterns)');
+        final hasPlayTypes = lpColumns.any((c) => c['name'] == 'play_types');
+        if (!hasPlayTypes) {
+          await db.execute('ALTER TABLE learned_patterns ADD COLUMN play_types TEXT DEFAULT ""');
+        }
+      } catch (e) {
+        print('Database upgrade v8 error: $e');
       }
     }
   }
@@ -463,6 +495,38 @@ class DatabaseHelper {
       return await db.update('bet_records', record.toMap(), where: 'id = ?', whereArgs: [record.id]);
     } catch (e) {
       print('updateBet error: $e');
+      return 0;
+    }
+  }
+
+  Future<int> updateBetPaidStatus(int id, bool paid) async {
+    try {
+      final db = await database;
+      return await db.update(
+        'bet_records',
+        {'paid_status': paid ? 1 : 0},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    } catch (e) {
+      print('updateBetPaidStatus error: $e');
+      return 0;
+    }
+  }
+
+  Future<int> updateBetsPaidStatusByIds(List<int> ids, bool paid) async {
+    try {
+      if (ids.isEmpty) return 0;
+      final db = await database;
+      final placeholders = List.filled(ids.length, '?').join(',');
+      return await db.update(
+        'bet_records',
+        {'paid_status': paid ? 1 : 0},
+        where: 'id IN ($placeholders)',
+        whereArgs: ids,
+      );
+    } catch (e) {
+      print('updateBetsPaidStatusByIds error: $e');
       return 0;
     }
   }

@@ -6,6 +6,7 @@ class LearnedPattern {
   final String pattern;
   final int priority;
   final DateTime createdAt;
+  final List<String> playTypes;
 
   LearnedPattern({
     this.id,
@@ -15,6 +16,7 @@ class LearnedPattern {
     required this.pattern,
     this.priority = 0,
     DateTime? createdAt,
+    this.playTypes = const [],
   }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() {
@@ -25,12 +27,14 @@ class LearnedPattern {
       'pattern': pattern,
       'priority': priority,
       'created_at': createdAt.toIso8601String(),
+      'play_types': playTypes.join(','),
     };
     if (id != null) map['id'] = id;
     return map;
   }
 
   factory LearnedPattern.fromMap(Map<String, dynamic> map) {
+    final playTypesStr = (map['play_types'] ?? '') as String;
     return LearnedPattern(
       id: map['id'] as int?,
       sampleText: (map['sample_text'] ?? '') as String,
@@ -38,6 +42,7 @@ class LearnedPattern {
       playTypeName: (map['play_type_name'] ?? '') as String,
       pattern: (map['pattern'] ?? '') as String,
       priority: (map['priority'] ?? 0) as int,
+      playTypes: playTypesStr.isNotEmpty ? playTypesStr.split(',') : [],
       createdAt: map['created_at'] != null
           ? (DateTime.tryParse(map['created_at'].toString()) ?? DateTime.now())
           : DateTime.now(),

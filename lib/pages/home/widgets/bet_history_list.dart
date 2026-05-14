@@ -31,6 +31,8 @@ class _BetHistoryListState extends State<BetHistoryList> {
   final Set<String> _expandedBatches = {};
   static const int _collapsedItemCount = 6;
   int? _lastLotteryType;
+  DateTime _selectedDate = DateTime.now();
+  bool _showAllDates = false;
 
   @override
   void initState() {
@@ -61,14 +63,31 @@ class _BetHistoryListState extends State<BetHistoryList> {
     if (_isSearchMode) return _searchResults;
     final lotteryType = Provider.of<SettingsProvider>(context).defaultLotteryType;
     final bets = Provider.of<BetProvider>(context).bets.where((b) => b.lotteryType == lotteryType).toList();
-    if (_searchQuery.isEmpty) return bets;
+    
+    // 按日期筛选
+    final filteredByDate = _showAllDates 
+        ? bets 
+        : bets.where((b) => _isSameDay(b.createTime, _selectedDate)).toList();
+    
+    if (_searchQuery.isEmpty) return filteredByDate;
     final query = _searchQuery.toLowerCase();
-    return bets.where((b) =>
+    return filteredByDate.where((b) =>
       b.number.toLowerCase().contains(query) ||
       b.playTypeName.toLowerCase().contains(query) ||
       b.playType.toLowerCase().contains(query) ||
       b.batchId.toLowerCase().contains(query)
     ).toList();
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  String _getDateLabel(DateTime date) {
+    final now = DateTime.now();
+    if (_isSameDay(date, now)) return '今天';
+    if (_isSameDay(date, now.subtract(const Duration(days: 1)))) return '昨天';
+    return DateFormat('MM月dd日').format(date);
   }
 
   Map<String, List<BetRecord>> _getGroupedBets(List<BetRecord> bets) {
@@ -414,6 +433,33 @@ class _BetHistoryListState extends State<BetHistoryList> {
                 },
               ),
             Text(_isSearchMode ? '搜索结果' : '投注记录', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            if (!_isSearchMode) ...[
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => _showDatePicker(),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withAlpha(26),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.primary.withAlpha(50)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.calendar_today, size: 12, color: AppColors.primary),
+                      const SizedBox(width: 4),
+                      Text(
+                        _showAllDates ? '全部' : _getDateLabel(_selectedDate),
+                        style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(width: 2),
+                      Icon(Icons.arrow_drop_down, size: 14, color: AppColors.primary),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ]),
           Row(children: [
             if (_isSearchMode)
@@ -734,5 +780,90 @@ class _BetHistoryListState extends State<BetHistoryList> {
         ),
       ],
     ));
+  }
+
+  void _showDatePicker() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('选择日期', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: Icon(Icons.today, color: AppColors.primary),
+              title: const Text('今天'),
+              trailing: _isSameDay(_selectedDate, DateTime.now()) && !_showAllDates
+                  ? Icon(Icons.check, color: AppColors.primary)
+                  : null,
+              onTap: () {
+                setState(() {
+                  _selectedDate = DateTime.now();
+                  _showAllDates = false;
+                  _displayBatchCount = 10;
+                  _expandedBatches.clear();
+                });
+                Navigator.pop(ctx);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.calendar_view_day, color: AppColors.primary),
+              title: const Text('昨天'),
+              trailing: _isSameDay(_selectedDate, DateTime.now().subtract(const Duration(days: 1))) && !_showAllDates
+                  ? Icon(Icons.check, color: AppColors.primary)
+                  : null,
+              onTap: () {
+                setState(() {
+                  _selectedDate = DateTime.now().subtract(const Duration(days: 1));
+                  _showAllDates = false;
+                  _displayBatchCount = 10;
+                  _expandedBatches.clear();
+                });
+                Navigator.pop(ctx);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.date_range, color: AppColors.primary),
+              title: const Text('全部日期'),
+              trailing: _showAllDates
+                  ? Icon(Icons.check, color: AppColors.primary)
+                  : null,
+              onTap: () {
+                setState(() {
+                  _showAllDates = true;
+                  _displayBatchCount = 10;
+                  _expandedBatches.clear();
+                });
+                Navigator.pop(ctx);
+              },
+            ),
+            const Divider(),
+            // 显示最近7天的日期
+            ...List.generate(7, (index) {
+              final date = DateTime.now().subtract(Duration(days: index + 2));
+              return ListTile(
+                leading: Icon(Icons.calendar_today, size: 20, color: AppColors.textSecondary),
+                title: Text(DateFormat('MM月dd日').format(date)),
+                trailing: _isSameDay(_selectedDate, date) && !_showAllDates
+                    ? Icon(Icons.check, color: AppColors.primary)
+                    : null,
+                onTap: () {
+                  setState(() {
+                    _selectedDate = date;
+                    _showAllDates = false;
+                    _displayBatchCount = 10;
+                    _expandedBatches.clear();
+                  });
+                  Navigator.pop(ctx);
+                },
+              );
+            }),
+          ],
+        ),
+      ),
+    );
   }
 }

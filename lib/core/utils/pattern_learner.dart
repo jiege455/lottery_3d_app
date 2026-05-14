@@ -118,8 +118,8 @@ class PatternLearner {
   }
 
   /// 尝试用学习到的模式匹配文本
-  /// 返回匹配结果和相似度，不匹配返回null
-  static ({ParsedItem item, double similarity})? tryMatchWithSimilarity(String line, LearnedPattern learned, {double defaultMultiplier = 1.0}) {
+  /// 返回匹配结果列表和相似度，不匹配返回null
+  static ({List<ParsedItem> items, double similarity})? tryMatchWithSimilarity(String line, LearnedPattern learned, {double defaultMultiplier = 1.0}) {
     try {
       final inputKeywords = extractKeywords(line.trim());
       final patternKeywords = learned.pattern.split(',').where((s) => s.isNotEmpty).toList();
@@ -171,38 +171,61 @@ class PatternLearner {
         }
       }
 
-      final config = PlayTypes.getByCode(learned.playType);
-      if (config == null) return null;
+      final items = <ParsedItem>[];
 
-      final item = ParsedItem(
-        number: number,
-        playType: config.code,
-        playTypeName: config.name,
-        multiplier: multiplier,
-        color: config.color,
-        baseAmount: config.baseAmount,
-        isMultiplierCustomized: numStr != null,
-      );
+      // 如果设置了多种玩法，为每种玩法生成一个 ParsedItem
+      if (learned.playTypes.isNotEmpty) {
+        for (final playTypeCode in learned.playTypes) {
+          final config = PlayTypes.getByCode(playTypeCode);
+          if (config != null) {
+            items.add(ParsedItem(
+              number: number,
+              playType: config.code,
+              playTypeName: config.name,
+              multiplier: multiplier,
+              color: config.color,
+              baseAmount: config.baseAmount,
+              isMultiplierCustomized: numStr != null,
+            ));
+          }
+        }
+      } else {
+        // 兼容旧数据：使用单个 playType
+        final config = PlayTypes.getByCode(learned.playType);
+        if (config != null) {
+          items.add(ParsedItem(
+            number: number,
+            playType: config.code,
+            playTypeName: config.name,
+            multiplier: multiplier,
+            color: config.color,
+            baseAmount: config.baseAmount,
+            isMultiplierCustomized: numStr != null,
+          ));
+        }
+      }
 
-      return (item: item, similarity: similarity);
+      if (items.isEmpty) return null;
+
+      return (items: items, similarity: similarity);
     } catch (e) {
       print('PatternLearner.tryMatchWithSimilarity error: $e');
       return null;
     }
   }
 
-  /// 尝试用学习到的模式匹配文本（兼容旧接口）
+  /// 尝试用学习到的模式匹配文本（兼容旧接口，返回单个）
   static ParsedItem? tryMatch(String line, LearnedPattern learned, {double defaultMultiplier = 1.0}) {
     final result = tryMatchWithSimilarity(line, learned, defaultMultiplier: defaultMultiplier);
-    return result?.item;
+    return result?.items.firstOrNull;
   }
 
   /// 批量尝试匹配所有学习到的模式
-  /// 返回相似度最高的匹配结果
-  static ParsedItem? tryMatchAll(String line, List<LearnedPattern> patterns, {double defaultMultiplier = 1.0}) {
+  /// 返回相似度最高的匹配结果列表
+  static List<ParsedItem>? tryMatchAll(String line, List<LearnedPattern> patterns, {double defaultMultiplier = 1.0}) {
     if (patterns.isEmpty) return null;
 
-    ({ParsedItem item, double similarity})? bestMatch;
+    ({List<ParsedItem> items, double similarity})? bestMatch;
 
     for (final pattern in patterns) {
       final result = tryMatchWithSimilarity(line, pattern, defaultMultiplier: defaultMultiplier);
@@ -213,7 +236,7 @@ class PatternLearner {
       }
     }
 
-    return bestMatch?.item;
+    return bestMatch?.items;
   }
 
   /// 验证模式是否有效

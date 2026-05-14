@@ -27,7 +27,7 @@ class _PatternManagePageState extends State<PatternManagePage> {
 
   void _showAddPatternDialog() {
     final sampleCtrl = TextEditingController();
-    String selectedPlayType = 'single';
+    final Set<String> selectedPlayTypes = {'single'};
 
     showDialog(
       context: context,
@@ -50,18 +50,25 @@ class _PatternManagePageState extends State<PatternManagePage> {
                   maxLines: 2,
                 ),
                 const SizedBox(height: 16),
-                const Text('这段文本应该识别为:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                const Text('这段文本应该识别为:（可多选）', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 Container(
                   constraints: const BoxConstraints(maxHeight: 300),
                   child: SingleChildScrollView(
                     child: Column(
-                      children: PlayTypes.all.map((pt) => RadioListTile<String>(
+                      children: PlayTypes.all.map((pt) => CheckboxListTile(
                         title: Text(pt.name, style: const TextStyle(fontSize: 14)),
                         subtitle: Text(pt.ruleText, style: const TextStyle(fontSize: 11, color: AppColors.textLight)),
-                        value: pt.code,
-                        groupValue: selectedPlayType,
-                        onChanged: (v) => setState(() => selectedPlayType = v!),
+                        value: selectedPlayTypes.contains(pt.code),
+                        onChanged: (v) => setState(() {
+                          if (v == true) {
+                            selectedPlayTypes.add(pt.code);
+                          } else {
+                            if (selectedPlayTypes.length > 1) {
+                              selectedPlayTypes.remove(pt.code);
+                            }
+                          }
+                        }),
                         dense: true,
                         activeColor: pt.color,
                       )).toList(),
@@ -80,16 +87,22 @@ class _PatternManagePageState extends State<PatternManagePage> {
                   ToastUtil.warning(ctx, '请输入示例文本');
                   return;
                 }
+                if (selectedPlayTypes.isEmpty) {
+                  ToastUtil.warning(ctx, '请至少选择一种玩法');
+                  return;
+                }
                 Navigator.pop(ctx);
-                final config = PlayTypes.getByCode(selectedPlayType);
-                if (config == null) return;
+                final primaryConfig = PlayTypes.getByCode(selectedPlayTypes.first);
+                if (primaryConfig == null) return;
+                final playTypeNames = selectedPlayTypes.map((code) => PlayTypes.getByCode(code)?.name ?? code).join('、');
                 final id = await Provider.of<LearnedPatternProvider>(context, listen: false).addPattern(
                   sample,
-                  selectedPlayType,
-                  config.name,
+                  selectedPlayTypes.first,
+                  primaryConfig.name,
+                  playTypes: selectedPlayTypes.toList(),
                 );
                 if (id > 0) {
-                  if (mounted) ToastUtil.success(context, '已添加：${config.name}格式');
+                  if (mounted) ToastUtil.success(context, '已添加：$playTypeNames');
                 } else {
                   if (mounted) ToastUtil.error(context, '添加失败');
                 }
@@ -104,7 +117,9 @@ class _PatternManagePageState extends State<PatternManagePage> {
 
   void _showEditPatternDialog(LearnedPattern pattern) {
     final sampleCtrl = TextEditingController(text: pattern.sampleText);
-    String selectedPlayType = pattern.playType;
+    final Set<String> selectedPlayTypes = pattern.playTypes.isNotEmpty
+        ? pattern.playTypes.toSet()
+        : {pattern.playType};
 
     showDialog(
       context: context,
@@ -127,18 +142,25 @@ class _PatternManagePageState extends State<PatternManagePage> {
                   maxLines: 2,
                 ),
                 const SizedBox(height: 16),
-                const Text('这段文本应该识别为:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                const Text('这段文本应该识别为:（可多选）', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 Container(
                   constraints: const BoxConstraints(maxHeight: 300),
                   child: SingleChildScrollView(
                     child: Column(
-                      children: PlayTypes.all.map((pt) => RadioListTile<String>(
+                      children: PlayTypes.all.map((pt) => CheckboxListTile(
                         title: Text(pt.name, style: const TextStyle(fontSize: 14)),
                         subtitle: Text(pt.ruleText, style: const TextStyle(fontSize: 11, color: AppColors.textLight)),
-                        value: pt.code,
-                        groupValue: selectedPlayType,
-                        onChanged: (v) => setState(() => selectedPlayType = v!),
+                        value: selectedPlayTypes.contains(pt.code),
+                        onChanged: (v) => setState(() {
+                          if (v == true) {
+                            selectedPlayTypes.add(pt.code);
+                          } else {
+                            if (selectedPlayTypes.length > 1) {
+                              selectedPlayTypes.remove(pt.code);
+                            }
+                          }
+                        }),
                         dense: true,
                         activeColor: pt.color,
                       )).toList(),
@@ -157,9 +179,14 @@ class _PatternManagePageState extends State<PatternManagePage> {
                   ToastUtil.warning(ctx, '请输入示例文本');
                   return;
                 }
+                if (selectedPlayTypes.isEmpty) {
+                  ToastUtil.warning(ctx, '请至少选择一种玩法');
+                  return;
+                }
                 Navigator.pop(ctx);
-                final config = PlayTypes.getByCode(selectedPlayType);
-                if (config == null) return;
+                final primaryConfig = PlayTypes.getByCode(selectedPlayTypes.first);
+                if (primaryConfig == null) return;
+                final playTypeNames = selectedPlayTypes.map((code) => PlayTypes.getByCode(code)?.name ?? code).join('、');
 
                 // 删除旧的，添加新的
                 if (pattern.id != null) {
@@ -167,11 +194,12 @@ class _PatternManagePageState extends State<PatternManagePage> {
                 }
                 final id = await Provider.of<LearnedPatternProvider>(context, listen: false).addPattern(
                   sample,
-                  selectedPlayType,
-                  config.name,
+                  selectedPlayTypes.first,
+                  primaryConfig.name,
+                  playTypes: selectedPlayTypes.toList(),
                 );
                 if (id > 0) {
-                  if (mounted) ToastUtil.success(context, '已更新：${config.name}格式');
+                  if (mounted) ToastUtil.success(context, '已更新：$playTypeNames');
                 } else {
                   if (mounted) ToastUtil.error(context, '更新失败');
                 }
@@ -222,6 +250,11 @@ class _PatternManagePageState extends State<PatternManagePage> {
             Text('案例: ${pattern.sampleText}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
             const SizedBox(height: 4),
             Text('关键词: ${pattern.pattern}', style: const TextStyle(fontSize: 10, color: AppColors.textLight)),
+            const SizedBox(height: 4),
+            Text(
+              '关联玩法: ${pattern.playTypes.isNotEmpty ? pattern.playTypes.map((code) => PlayTypes.getByCode(code)?.name ?? code).join('、') : pattern.playTypeName}',
+              style: const TextStyle(fontSize: 10, color: AppColors.textLight),
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: testCtrl,
@@ -240,9 +273,10 @@ class _PatternManagePageState extends State<PatternManagePage> {
               if (testText.isEmpty) return;
               Navigator.pop(ctx);
 
-              final result = PatternLearner.tryMatch(testText, pattern);
-              if (result != null) {
-                ToastUtil.success(context, '匹配成功！识别为：${result.playTypeName}');
+              final result = PatternLearner.tryMatchWithSimilarity(testText, pattern);
+              if (result != null && result.items.isNotEmpty) {
+                final playTypeNames = result.items.map((item) => item.playTypeName).join('、');
+                ToastUtil.success(context, '匹配成功！识别为：$playTypeNames（相似度: ${(result.similarity * 100).toStringAsFixed(1)}%）');
               } else {
                 // 显示相似度信息帮助用户理解
                 final inputKeywords = PatternLearner.extractKeywords(testText);
@@ -368,7 +402,9 @@ class _PatternManagePageState extends State<PatternManagePage> {
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                           child: Text(
-                                            pattern.playTypeName,
+                                            pattern.playTypes.isNotEmpty
+                                                ? pattern.playTypes.map((code) => PlayTypes.getByCode(code)?.name ?? code).join('、')
+                                                : pattern.playTypeName,
                                             style: TextStyle(
                                               fontSize: 11,
                                               fontWeight: FontWeight.w600,

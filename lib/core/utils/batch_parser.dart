@@ -936,8 +936,8 @@ class BatchParser {
       final trimmed = line.trim();
       // 先尝试学习到的模式
       final matched = PatternLearner.tryMatchAll(trimmed, patterns, defaultMultiplier: defaultMultiplier);
-      if (matched != null) {
-        results.add(matched);
+      if (matched != null && matched.isNotEmpty) {
+        results.addAll(matched);
         hasMatched = true;
         continue;
       }

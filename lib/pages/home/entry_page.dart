@@ -147,7 +147,7 @@ class _EntryPageState extends State<EntryPage> {
       return;
     }
 
-    String selectedPlayType = 'single';
+    final Set<String> selectedPlayTypes = {'single'};
 
     showDialog(
       context: context,
@@ -171,18 +171,25 @@ class _EntryPageState extends State<EntryPage> {
                   child: Text(sample, style: const TextStyle(fontFamily: 'monospace', fontSize: 13)),
                 ),
                 const SizedBox(height: 16),
-                const Text('这段文本应该识别为:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                const Text('这段文本应该识别为:（可多选）', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 Container(
                   constraints: const BoxConstraints(maxHeight: 250),
                   child: SingleChildScrollView(
                     child: Column(
-                      children: PlayTypes.all.map((pt) => RadioListTile<String>(
+                      children: PlayTypes.all.map((pt) => CheckboxListTile(
                         title: Text(pt.name, style: const TextStyle(fontSize: 14)),
                         subtitle: Text(pt.ruleText, style: const TextStyle(fontSize: 11, color: AppColors.textLight)),
-                        value: pt.code,
-                        groupValue: selectedPlayType,
-                        onChanged: (v) => setState(() => selectedPlayType = v!),
+                        value: selectedPlayTypes.contains(pt.code),
+                        onChanged: (v) => setState(() {
+                          if (v == true) {
+                            selectedPlayTypes.add(pt.code);
+                          } else {
+                            if (selectedPlayTypes.length > 1) {
+                              selectedPlayTypes.remove(pt.code);
+                            }
+                          }
+                        }),
                         dense: true,
                         activeColor: pt.color,
                       )).toList(),
@@ -208,16 +215,22 @@ class _EntryPageState extends State<EntryPage> {
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
             ElevatedButton(
               onPressed: () async {
+                if (selectedPlayTypes.isEmpty) {
+                  ToastUtil.warning(ctx, '请至少选择一种玩法');
+                  return;
+                }
                 Navigator.pop(ctx);
-                final config = PlayTypes.getByCode(selectedPlayType);
-                if (config == null) return;
+                final primaryConfig = PlayTypes.getByCode(selectedPlayTypes.first);
+                if (primaryConfig == null) return;
+                final playTypeNames = selectedPlayTypes.map((code) => PlayTypes.getByCode(code)?.name ?? code).join('、');
                 final id = await Provider.of<LearnedPatternProvider>(context, listen: false).addPattern(
                   sample,
-                  selectedPlayType,
-                  config.name,
+                  selectedPlayTypes.first,
+                  primaryConfig.name,
+                  playTypes: selectedPlayTypes.toList(),
                 );
                 if (id > 0) {
-                  if (mounted) ToastUtil.success(context, '已学会：${config.name}格式');
+                  if (mounted) ToastUtil.success(context, '已学会：$playTypeNames');
                   // 重新解析当前输入
                   _onInputChanged(_inputController.text);
                 } else {

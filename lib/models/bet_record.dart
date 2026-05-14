@@ -3,11 +3,12 @@ class BetRecord {
   final String number;
   final String playType;
   final String playTypeName;
-  int lotteryType;
-  double multiplier;
-  double baseAmount;
-  String batchId;
+  final int lotteryType;
+  final double multiplier;
+  final double baseAmount;
+  final String batchId;
   final DateTime createTime;
+  final bool paidStatus;
 
   BetRecord({
     this.id,
@@ -17,14 +18,12 @@ class BetRecord {
     this.lotteryType = 1,
     this.multiplier = 1.0,
     this.baseAmount = 2.0,
-    String? batchId,
+    this.batchId = '',
     DateTime? createTime,
-  }) : batchId = batchId ?? _generateBatchId(),
-       createTime = createTime ?? DateTime.now();
+    this.paidStatus = false,
+  }) : createTime = createTime ?? DateTime.now();
 
-  static String _generateBatchId() {
-    return 'B${DateTime.now().millisecondsSinceEpoch}';
-  }
+  double get totalAmount => baseAmount * multiplier;
 
   Map<String, dynamic> toMap() {
     final map = <String, dynamic>{
@@ -36,6 +35,7 @@ class BetRecord {
       'base_amount': baseAmount,
       'batch_id': batchId,
       'create_time': createTime.toIso8601String(),
+      'paid_status': paidStatus ? 1 : 0,
     };
     if (id != null) map['id'] = id;
     return map;
@@ -45,13 +45,16 @@ class BetRecord {
     return BetRecord(
       id: map['id'] as int?,
       number: (map['number'] ?? '') as String,
-      playType: (map['play_type'] ?? 'single') as String,
-      playTypeName: (map['play_type_name'] ?? '直选') as String,
-      lotteryType: (map['lottery_type'] is int ? map['lottery_type'] : (int.tryParse(map['lottery_type']?.toString() ?? '1') ?? 1)),
-      multiplier: (map['multiplier'] is num ? (map['multiplier'] as num).toDouble() : (double.tryParse(map['multiplier']?.toString() ?? '1.0') ?? 1.0)),
-      baseAmount: (map['base_amount'] is num ? (map['base_amount'] as num).toDouble() : (double.tryParse(map['base_amount']?.toString() ?? '2.0') ?? 2.0)),
-      batchId: (map['batch_id'] ?? _generateBatchId()) as String,
-      createTime: map['create_time'] != null ? (DateTime.tryParse(map['create_time'].toString()) ?? DateTime.now()) : DateTime.now(),
+      playType: (map['play_type'] ?? '') as String,
+      playTypeName: (map['play_type_name'] ?? '') as String,
+      lotteryType: (map['lottery_type'] ?? 1) as int,
+      multiplier: (map['multiplier'] ?? 1.0) as double,
+      baseAmount: (map['base_amount'] ?? 2.0) as double,
+      batchId: (map['batch_id'] ?? '') as String,
+      paidStatus: (map['paid_status'] ?? 0) == 1,
+      createTime: map['create_time'] != null
+          ? (DateTime.tryParse(map['create_time'].toString()) ?? DateTime.now())
+          : DateTime.now(),
     );
   }
 
@@ -65,6 +68,7 @@ class BetRecord {
     double? baseAmount,
     String? batchId,
     DateTime? createTime,
+    bool? paidStatus,
   }) {
     return BetRecord(
       id: id ?? this.id,
@@ -76,6 +80,7 @@ class BetRecord {
       baseAmount: baseAmount ?? this.baseAmount,
       batchId: batchId ?? this.batchId,
       createTime: createTime ?? this.createTime,
+      paidStatus: paidStatus ?? this.paidStatus,
     );
   }
 }

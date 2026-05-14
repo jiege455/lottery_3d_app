@@ -23,10 +23,19 @@ class LearnedPatternProvider with ChangeNotifier {
     }
   }
 
-  Future<int> addPattern(String sampleText, String playType, String playTypeName) async {
+  Future<int> addPattern(String sampleText, String playType, String playTypeName, {List<String>? playTypes}) async {
     try {
       final learned = PatternLearner.learn(sampleText, playType, playTypeName);
-      final id = await _db.insertLearnedPattern(learned);
+      final learnedWithTypes = LearnedPattern(
+        sampleText: learned.sampleText,
+        playType: learned.playType,
+        playTypeName: learned.playTypeName,
+        pattern: learned.pattern,
+        priority: learned.priority,
+        createdAt: learned.createdAt,
+        playTypes: playTypes ?? [],
+      );
+      final id = await _db.insertLearnedPattern(learnedWithTypes);
       await loadPatterns();
       return id;
     } catch (e) {
@@ -57,6 +66,7 @@ class LearnedPatternProvider with ChangeNotifier {
         pattern: _patterns[index].pattern,
         priority: priority,
         createdAt: _patterns[index].createdAt,
+        playTypes: _patterns[index].playTypes,
       );
       await _db.updateLearnedPattern(updated);
       _patterns[index] = updated;
